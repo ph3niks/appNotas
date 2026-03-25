@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
+# Configuración estética
+st.set_page_config(page_title="Vanguard Notes | Portal Académico", layout="wide")
 
 # 1. EL DICCIONARIO DEBE IR AQUÍ (Antes de ser usado)
 MAPA_CURSOS = {
@@ -12,19 +14,21 @@ MAPA_CURSOS = {
     "63507": "Estadística Inferencial y Muestreo"
 }
 
-# 2. CONFIGURACIÓN ESTÉTICA (CSS)
+# 3. UN SOLO BLOQUE DE CSS LIMPIO
 st.markdown("""
     <style>
-    /* ... tu CSS ... */
+    .main { background-color: #0E1117; color: #FFFFFF; }
+    .stMetric { ... }
     [data-testid="stMetricLabel"] p { 
         color: #E0E0E0 !important; 
         font-size: 1.1rem !important; 
+        font-weight: 600 !important;
+        text-transform: uppercase;
+        letter-spacing: 1px;
     }
-    </style>
-""", unsafe_allow_html=True)
+#""", unsafe_allow_html=True)
 
-# Configuración estética
-st.set_page_config(page_title="Vanguard Notes | Portal Académico", layout="wide")
+
 
 # --- ESTILO VANGUARDISTA (CSS) (Update Líneas 10-22) ---
 st.markdown("""
