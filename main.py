@@ -65,41 +65,45 @@ if dict_cursos:
             st.markdown(f"### Bienvenid@, <span style='color:#00F2FF'>{nombre_u}</span>", unsafe_allow_html=True)
             st.markdown(f"**Asignatura:** {nombre_materia} | **NRC:** {nrc_sel}")
 
-            # --- SECCIÓN 1: KPIs 
+            # --- SECCIÓN 1: KPIs (Update Líneas 82-95) ---
             st.divider()
             cols = st.columns(4)
-            cols[0].metric("Parcial 1 (P1)", f"{row.get('P1', 0):.2f}")
-            cols[1].metric("Parcial 2 (P2)", f"{row.get('P2', 0):.2f}")
             
-            # Buscamos PQT1 o PQT según el NRC
+            # Aplicamos redondeo a 1 decimal (.1f) para cumplir tu regla
+            cols[0].metric("Parcial 1 (P1)", f"{round(float(row.get('P1', 0)), 1):.1f}")
+            cols[1].metric("Parcial 2 (P2)", f"{round(float(row.get('P2', 0)), 1):.1f}")
+            
             val_pqt = row.get('PQT1', row.get('PQT', 0))
-            label_pqt = "Promedio PQT"
-            
-            # Prioridad para CN (Nivelación) si existe nota registrada
-            if 'CN' in row and row['CN'] > 0:
-                cols[2].metric("Nivelación (CN)", f"{row['CN']:.2f}")
-            else:
-                cols[2].metric(label_pqt, f"{val_pqt:.2f}")
-            
-            cols[3].metric("NOTA 1er CORTE", f"{row['1CTE']:.2f}")
+            cols[2].metric("Promedio PQT", f"{round(float(val_pqt), 1):.1f}")
+            cols[3].metric("NOTA 1er CORTE", f"{round(float(row.get('1CTE', 0)), 1):.1f}")
 
             # --- SECCIÓN 2: REGISTRO DE TALLERES (Update Líneas 98-117) ---
             st.subheader("📝 Registro Detallado: Talleres y Quices")
             
-            # Filtramos solo columnas que sean talleres o quices y tengan nota real
             cols_detalle = []
+            nombres_nuevos = {}
+            
             for col in df_actual.columns:
-                # Mantenemos 'No' para orden, y filtramos por prefijos Ta o Q
-                if col == 'No' or col.startswith(('Ta', 'Q')):
-                    # Solo si el estudiante tiene una nota registrada (mayor a 0)
+                if col == 'No':
+                    cols_detalle.append(col)
+                # Buscamos columnas que empiecen por Ta o Q
+                elif col.startswith(('Ta', 'Q')):
+                    # Verificamos que sea número y mayor a 0 (para incluir el 0.1)
                     if pd.api.types.is_number(row[col]) and row[col] > 0:
                         cols_detalle.append(col)
+                        # Creamos el nombre elegante: Ta1 -> Taller No 1
+                        tipo = "Taller" if col.startswith('Ta') else "Quiz"
+                        num = col.replace('Ta', '').replace('Q', '')
+                        nombres_nuevos[col] = f"{tipo} No {num}"
             
-            # Presentación elegante de la fila de detalles
+            # Filtramos y renombramos
+            df_vanguard = est[cols_detalle].rename(columns=nombres_nuevos)
+            
+            # Mostramos la tabla con redondeo a 1 decimal
             st.dataframe(
-                est[cols_detalle].style.format(
-                    formatter="{:.2f}", 
-                    subset=[c for c in cols_detalle if c != 'No']
+                df_vanguard.style.format(
+                    formatter="{:.1f}", 
+                    subset=[c for c in df_vanguard.columns if c != 'No']
                 ), 
                 use_container_width=True,
                 hide_index=True
