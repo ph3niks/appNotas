@@ -65,19 +65,27 @@ if dict_cursos:
             st.markdown(f"### Bienvenid@, <span style='color:#00F2FF'>{nombre_u}</span>", unsafe_allow_html=True)
             st.markdown(f"**Asignatura:** {nombre_materia} | **NRC:** {nrc_sel}")
 
-            # --- SECCIÓN 1: KPIs (Update Líneas 82-95) ---
+            # --- SECCIÓN 1: KPIs (Update Líneas 70-85) ---
             st.divider()
             cols = st.columns(4)
             
-            # Aplicamos redondeo a 1 decimal (.1f) para cumplir tu regla
-            cols[0].metric("Parcial 1 (P1)", f"{round(float(row.get('P1', 0)), 1):.1f}")
-            cols[1].metric("Parcial 2 (P2)", f"{round(float(row.get('P2', 0)), 1):.1f}")
+            # Función auxiliar interna para limpiar y redondear notas (Evita el error de fecha)
+            def clean_note(value):
+                try:
+                    num = pd.to_numeric(value, errors='coerce')
+                    return round(float(num), 1) if pd.notnull(num) else 0.0
+                except:
+                    return 0.0
+            
+            # Aplicamos la limpieza y el formato .1f para el redondeo visual
+            cols[0].metric("Parcial 1 (P1)", f"{clean_note(row.get('P1', 0)):.1f}")
+            cols[1].metric("Parcial 2 (P2)", f"{clean_note(row.get('P2', 0)):.1f}")
             
             val_pqt = row.get('PQT1', row.get('PQT', 0))
-            cols[2].metric("Promedio PQT", f"{round(float(val_pqt), 1):.1f}")
-            cols[3].metric("NOTA 1er CORTE", f"{round(float(row.get('1CTE', 0)), 1):.1f}")
+            cols[2].metric("Promedio PQT", f"{clean_note(val_pqt):.1f}")
+            cols[3].metric("NOTA 1er CORTE", f"{clean_note(row.get('1CTE', 0)):.1f}")
 
-            # --- SECCIÓN 2: REGISTRO DE TALLERES (Update Líneas 98-117) ---
+            # --- SECCIÓN 2: REGISTRO DE TALLERES (Update Líneas 88-110) ---
             st.subheader("📝 Registro Detallado: Talleres y Quices")
             
             cols_detalle = []
@@ -86,28 +94,31 @@ if dict_cursos:
             for col in df_actual.columns:
                 if col == 'No':
                     cols_detalle.append(col)
-                # Buscamos columnas que empiecen por Ta o Q
                 elif col.startswith(('Ta', 'Q')):
-                    # Verificamos que sea número y mayor a 0 (para incluir el 0.1)
-                    if pd.api.types.is_number(row[col]) and row[col] > 0:
+                    # Convertimos a número para validar si hay nota real
+                    val_limpio = pd.to_numeric(row[col], errors='coerce')
+                    if pd.notnull(val_limpio) and val_limpio > 0:
                         cols_detalle.append(col)
-                        # Creamos el nombre elegante: Ta1 -> Taller No 1
                         tipo = "Taller" if col.startswith('Ta') else "Quiz"
                         num = col.replace('Ta', '').replace('Q', '')
                         nombres_nuevos[col] = f"{tipo} No {num}"
             
-            # Filtramos y renombramos
-            df_vanguard = est[cols_detalle].rename(columns=nombres_nuevos)
+            # Creamos tabla, renombramos y aplicamos redondeo a 1 decimal
+            if cols_detalle:
+                df_vanguard = est[cols_detalle].copy()
+                # Convertimos todas las columnas de notas a numérico para que el style.format no falle
+                for c in cols_detalle:
+                    if c != 'No':
+                        df_vanguard[c] = pd.to_numeric(df_vanguard[c], errors='coerce').apply(lambda x: round(x, 1))
             
-            # Mostramos la tabla con redondeo a 1 decimal
-            st.dataframe(
-                df_vanguard.style.format(
-                    formatter="{:.1f}", 
-                    subset=[c for c in df_vanguard.columns if c != 'No']
-                ), 
-                use_container_width=True,
-                hide_index=True
-            )
+                st.dataframe(
+                    df_vanguard.rename(columns=nombres_nuevos).style.format(
+                        formatter="{:.1f}", 
+                        subset=[nombres_nuevos[c] for c in cols_detalle if c != 'No']
+                    ), 
+                    use_container_width=True,
+                    hide_index=True
+                )
 
             # --- SECCIÓN 3: PROGRESO (Update Líneas 120-128) ---
             st.divider()
