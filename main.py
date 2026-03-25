@@ -32,9 +32,18 @@ def load_data():
     file_path = "app_notas.xlsx"
     try:
         xls = pd.ExcelFile(file_path, engine='openpyxl')
-        return {sheet: xls.parse(sheet) for sheet in xls.sheet_names}
+        data = {}
+        for sheet in xls.sheet_names:
+            df = xls.parse(sheet)
+            # --- LIMPIEZA CRÍTICA ---
+            # Convertimos columnas de notas a numérico, forzando que las fechas sean NaN
+            for col in df.columns:
+                if col not in ['NOMBRE', 'ID', 'NRC']:
+                    df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+            data[sheet] = df
+        return data
     except Exception as e:
-        st.error(f"Error al cargar 'app_notas.xlsx': {e}")
+        st.error(f"Error al cargar: {e}")
         return None
 
 dict_cursos = load_data()
@@ -69,56 +78,36 @@ if dict_cursos:
             st.divider()
             cols = st.columns(4)
             
-            # Función auxiliar interna para limpiar y redondear notas (Evita el error de fecha)
-            def clean_note(value):
-                try:
-                    num = pd.to_numeric(value, errors='coerce')
-                    return round(float(num), 1) if pd.notnull(num) else 0.0
-                except:
-                    return 0.0
+            # Función de redondeo académico (0.5 o más sube al siguiente)
+            def round_nota(val):
+                return float(pd.Series([val]).apply(lambda x: round(x + 0.0000001, 1))[0])
             
-            # Aplicamos la limpieza y el formato .1f para el redondeo visual
-            cols[0].metric("Parcial 1 (P1)", f"{clean_note(row.get('P1', 0)):.1f}")
-            cols[1].metric("Parcial 2 (P2)", f"{clean_note(row.get('P2', 0)):.1f}")
+            n1 = round_nota(row.get('P1', 0))
+            n2 = round_nota(row.get('P2', 0))
+            pqt = round_nota(row.get('PQT1', row.get('PQT', 0)))
+            c1 = round_nota(row.get('1CTE', 0))
             
-            val_pqt = row.get('PQT1', row.get('PQT', 0))
-            cols[2].metric("Promedio PQT", f"{clean_note(val_pqt):.1f}")
-            cols[3].metric("NOTA 1er CORTE", f"{clean_note(row.get('1CTE', 0)):.1f}")
+            cols[0].metric("Parcial 1 (P1)", f"{n1:.1f}")
+            cols[1].metric("Parcial 2 (P2)", f"{n2:.1f}")
+            cols[2].metric("Promedio PQT", f"{pqt:.1f}")
+            cols[3].metric("NOTA 1er CORTE", f"{c1:.1f}")
 
-            # --- SECCIÓN 2: REGISTRO DE TALLERES (Update Líneas 88-110) ---
+            # --- SECCIÓN 2: TALLERES (Update Líneas 90-115) ---
             st.subheader("📝 Registro Detallado: Talleres y Quices")
             
-            cols_detalle = []
-            nombres_nuevos = {}
+            cols_detalle = [c for c in df_actual.columns if c.startswith(('Ta', 'Q')) and row[c] > 0]
+            if 'No' in df_actual.columns:
+                cols_detalle.insert(0, 'No')
             
-            for col in df_actual.columns:
-                if col == 'No':
-                    cols_detalle.append(col)
-                elif col.startswith(('Ta', 'Q')):
-                    # Convertimos a número para validar si hay nota real
-                    val_limpio = pd.to_numeric(row[col], errors='coerce')
-                    if pd.notnull(val_limpio) and val_limpio > 0:
-                        cols_detalle.append(col)
-                        tipo = "Taller" if col.startswith('Ta') else "Quiz"
-                        num = col.replace('Ta', '').replace('Q', '')
-                        nombres_nuevos[col] = f"{tipo} No {num}"
+            # Renombrado dinámico
+            mapping = {c: f"Taller No {c.replace('Ta','')}" if c.startswith('Ta') else f"Quiz No {c.replace('Q','')}" for c in cols_detalle if c != 'No'}
             
-            # Creamos tabla, renombramos y aplicamos redondeo a 1 decimal
-            if cols_detalle:
-                df_vanguard = est[cols_detalle].copy()
-                # Convertimos todas las columnas de notas a numérico para que el style.format no falle
-                for c in cols_detalle:
-                    if c != 'No':
-                        df_vanguard[c] = pd.to_numeric(df_vanguard[c], errors='coerce').apply(lambda x: round(x, 1))
-            
-                st.dataframe(
-                    df_vanguard.rename(columns=nombres_nuevos).style.format(
-                        formatter="{:.1f}", 
-                        subset=[nombres_nuevos[c] for c in cols_detalle if c != 'No']
-                    ), 
-                    use_container_width=True,
-                    hide_index=True
-                )
+            df_format = est[cols_detalle].rename(columns=mapping)
+            st.dataframe(
+                df_format.style.format(formatter="{:.1f}", subset=[v for v in mapping.values()]),
+                use_container_width=True,
+                hide_index=True
+            )
 
             # --- SECCIÓN 3: PROGRESO (Update Líneas 120-128) ---
             st.divider()
