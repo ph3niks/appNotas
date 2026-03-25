@@ -19,7 +19,7 @@ st.markdown("""
 @st.cache_data
 def load_data():
     # Reemplaza con el nombre de tu archivo
-    file_path = "notas_estudiantes.xlsx" 
+    file_path = "app_notas.xlsx" 
     try:
         xls = pd.ExcelFile(file_path)
         return {sheet: xls.parse(sheet) for sheet in xls.sheet_names}
