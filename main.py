@@ -5,27 +5,31 @@ import plotly.graph_objects as go
 # Configuración estética
 st.set_page_config(page_title="Vanguard Notes | Portal Académico", layout="wide")
 
-# --- ESTILO VANGUARDISTA (CSS) ---
+# --- ESTILO VANGUARDISTA (CSS) (Update Líneas 10-22) ---
 st.markdown("""
     <style>
     .main { background-color: #0E1117; color: #FFFFFF; }
-    .stMetric { background-color: #161B22; border-radius: 12px; border: 1px solid #30363D; padding: 15px; }
-    [data-testid="stMetricValue"] { color: #00F2FF !important; }
+    .stMetric { 
+        background-color: #161B22; 
+        border-radius: 12px; 
+        border: 1px solid #30363D; 
+        padding: 15px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    /* Color del número (Valor) */
+    [data-testid="stMetricValue"] { color: #00F2FF !important; font-weight: 700; }
+    /* Color de la etiqueta (Título de arriba) - AHORA MÁS VISIBLE */
+    [data-testid="stMetricLabel"] p { 
+        color: #E0E0E0 !important; 
+        font-size: 1.1rem !important; 
+        font-weight: 600 !important;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
     .stProgress > div > div > div > div { background-image: linear-gradient(to right, #7000FF , #00F2FF); }
     h1, h2, h3 { color: #00F2FF; font-family: 'Inter', sans-serif; }
-    /* Estilo para tablas */
-    .stDataFrame { border: 1px solid #30363D; border-radius: 10px; }
     </style>
     """, unsafe_allow_html=True)
-
-# --- MAPEO DE ASIGNATURAS ---
-MAPA_CURSOS = {
-    "60299": "Matemáticas II",
-    "55546": "Matemáticas II",
-    "62529": "Matemáticas II",
-    "55581": "Cálculo Diferencial",
-    "63507": "Estadística Inferencial y Muestreo"
-}
 
 @st.cache_data
 def load_data():
@@ -87,10 +91,10 @@ if dict_cursos:
             pqt = round_nota(row.get('PQT1', row.get('PQT', 0)))
             c1 = round_nota(row.get('1CTE', 0))
             
-            cols[0].metric("Parcial 1 (P1)", f"{n1:.1f}")
-            cols[1].metric("Parcial 2 (P2)", f"{n2:.1f}")
-            cols[2].metric("Promedio PQT", f"{pqt:.1f}")
-            cols[3].metric("NOTA 1er CORTE", f"{c1:.1f}")
+            cols[0].metric("Parcial 1", f"{n1:.1f}")
+            cols[1].metric("Parcial 2", f"{n2:.1f}")
+            cols[2].metric("Promedio Talleres", f"{pqt:.1f}")
+            cols[3].metric("Nota 1er Corte", f"{c1:.1f}")
 
             # --- SECCIÓN 2: TALLERES (Update Líneas 90-115) ---
             st.subheader("📝 Registro Detallado: Talleres y Quices")
