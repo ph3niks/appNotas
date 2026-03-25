@@ -1,11 +1,13 @@
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+#import streamlit as st
+#import pandas as pd
 
-# Configuración estética
+# 1. CONFIGURACIÓN INICIAL (DEBE SER LA PRIMERA)
 st.set_page_config(page_title="Vanguard Notes | Portal Académico", layout="wide")
 
-# 1. EL DICCIONARIO DEBE IR AQUÍ (Antes de ser usado)
+# 2. DICCIONARIO DE MATERIAS
 MAPA_CURSOS = {
     "60299": "Matemáticas II",
     "55546": "Matemáticas II",
@@ -14,23 +16,7 @@ MAPA_CURSOS = {
     "63507": "Estadística Inferencial y Muestreo"
 }
 
-# 3. UN SOLO BLOQUE DE CSS LIMPIO
-st.markdown("""
-    <style>
-    .main { background-color: #0E1117; color: #FFFFFF; }
-    .stMetric { ... }
-    [data-testid="stMetricLabel"] p { 
-        color: #E0E0E0 !important; 
-        font-size: 1.1rem !important; 
-        font-weight: 600 !important;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-#""", unsafe_allow_html=True)
-
-
-
-# --- ESTILO VANGUARDISTA (CSS) (Update Líneas 10-22) ---
+# 3. ESTILO CSS ÚNICO
 st.markdown("""
     <style>
     .main { background-color: #0E1117; color: #FFFFFF; }
@@ -41,9 +27,7 @@ st.markdown("""
         padding: 15px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.3);
     }
-    /* Color del número (Valor) */
     [data-testid="stMetricValue"] { color: #00F2FF !important; font-weight: 700; }
-    /* Color de la etiqueta (Título de arriba) - AHORA MÁS VISIBLE */
     [data-testid="stMetricLabel"] p { 
         color: #E0E0E0 !important; 
         font-size: 1.1rem !important; 
@@ -64,8 +48,6 @@ def load_data():
         data = {}
         for sheet in xls.sheet_names:
             df = xls.parse(sheet)
-            # --- LIMPIEZA CRÍTICA ---
-            # Convertimos columnas de notas a numérico, forzando que las fechas sean NaN
             for col in df.columns:
                 if col not in ['NOMBRE', 'ID', 'NRC']:
                     df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
@@ -75,80 +57,84 @@ def load_data():
         st.error(f"Error al cargar: {e}")
         return None
 
+def round_nota(val):
+    return float(pd.Series([val]).apply(lambda x: round(x + 0.0000001, 1))[0])
+
 dict_cursos = load_data()
 
 # --- BARRA LATERAL ---
 st.sidebar.title("💎 VANGUARD PORTAL")
 if dict_cursos:
     nrc_sel = st.sidebar.selectbox("Seleccione el NRC del Curso", list(dict_cursos.keys()))
-    
-    # Limpieza de NRC para el mapeo de nombres
     nrc_limpio = str(nrc_sel).replace("NRC", "").strip()
     nombre_materia = MAPA_CURSOS.get(nrc_limpio, "Asignatura General")
-    
     id_estudiante = st.sidebar.text_input("Ingrese su ID de Estudiante")
 
-    df_actual = dict_cursos[nrc_sel].fillna(0)
-    df_actual['ID'] = df_actual['ID'].astype(str)
-
     if id_estudiante:
+        df_actual = dict_cursos[nrc_sel]
+        df_actual['ID'] = df_actual['ID'].astype(str)
         est = df_actual[df_actual['ID'] == id_estudiante]
 
         if not est.empty:
             row = est.iloc[0]
-            
-            # Saludo con el nombre (extraído del Excel)
             nombre_u = row.get('NOMBRE', row.get('Nombre', 'Estudiante'))
             
+            # CABECERA Y PROGRESO (GLOBAL)
             st.markdown(f"### Bienvenid@, <span style='color:#00F2FF'>{nombre_u}</span>", unsafe_allow_html=True)
             st.markdown(f"**Asignatura:** {nombre_materia} | **NRC:** {nrc_sel}")
-
-            # --- SECCIÓN 1: KPIs (Update Líneas 70-85) ---
+            
+            # Barra de progreso siempre visible
+            puntos_c1 = round_nota(row.get('1CTE', 0)) * 0.5
+            puntos_c2 = round_nota(row.get('2CTE', 0)) * 0.5
+            puntos_totales = puntos_c1 + puntos_c2
+            progreso_visual = min(puntos_totales / 3.0, 1.0)
+            
+            st.subheader("📈 Progreso Hacia la Aprobación (Meta 3.0)")
+            st.progress(progreso_visual)
+            st.write(f"Puntos acumulados: **{puntos_totales:.2f}** de 3.0")
             st.divider()
-            cols = st.columns(4)
-            
-            # Función de redondeo académico (0.5 o más sube al siguiente)
-            def round_nota(val):
-                return float(pd.Series([val]).apply(lambda x: round(x + 0.0000001, 1))[0])
-            
-            n1 = round_nota(row.get('P1', 0))
-            n2 = round_nota(row.get('P2', 0))
-            pqt = round_nota(row.get('PQT1', row.get('PQT', 0)))
-            c1 = round_nota(row.get('1CTE', 0))
-            
-            cols[0].metric("Parcial 1", f"{n1:.1f}")
-            cols[1].metric("Parcial 2", f"{n2:.1f}")
-            cols[2].metric("Promedio Talleres", f"{pqt:.1f}")
-            cols[3].metric("Nota 1er Corte", f"{c1:.1f}")
 
-            # --- SECCIÓN 2: TALLERES (Update Líneas 90-115) ---
-            st.subheader("📝 Registro Detallado: Talleres y Quices")
-            
-            cols_detalle = [c for c in df_actual.columns if c.startswith(('Ta', 'Q')) and row[c] > 0]
-            if 'No' in df_actual.columns:
-                cols_detalle.insert(0, 'No')
-            
-            # Renombrado dinámico
-            mapping = {c: f"Taller No {c.replace('Ta','')}" if c.startswith('Ta') else f"Quiz No {c.replace('Q','')}" for c in cols_detalle if c != 'No'}
-            
-            df_format = est[cols_detalle].rename(columns=mapping)
-            st.dataframe(
-                df_format.style.format(formatter="{:.1f}", subset=[v for v in mapping.values()]),
-                use_container_width=True,
-                hide_index=True
-            )
+            # --- SISTEMA DE PESTAÑAS ---
+            tab1, tab2, tab3 = st.tabs(["📌 1er Corte", "🚀 2do Corte", "🎯 Simulador Final"])
 
-            # --- SECCIÓN 3: PROGRESO (Update Líneas 120-128) ---
-            st.divider()
-            st.subheader("📈 Estado de Aprobación Semestral")
-            puntos_actuales = row['1CTE'] * 0.5
-            porcentaje = min(puntos_actuales / 3.0, 1.0)
-            
-            st.progress(porcentaje)
-            st.write(f"Has acumulado **{puntos_actuales:.2f}** / 3.0 puntos necesarios.")
-            
-            # Mensaje de feedback elegante
-            if puntos_actuales >= 1.5:
-                st.success("✨ Excelente desempeño en este corte. Vas por encima de la media requerida.")
-            else:
-                st.info("💡 Recuerda que el segundo corte es una oportunidad para fortalecer tu promedio global.")
+            with tab1:
+                c1_cols = st.columns(4)
+                c1_cols[0].metric("Parcial 1", f"{round_nota(row.get('P1', 0)):.1f}")
+                c1_cols[1].metric("Parcial 2", f"{round_nota(row.get('P2', 0)):.1f}")
+                c1_cols[2].metric("Promedio Talleres", f"{round_nota(row.get('PQT1', row.get('PQT', 0))):.1f}")
+                c1_cols[3].metric("Nota 1er Corte", f"{round_nota(row.get('1CTE', 0)):.1f}")
+
+                st.subheader("📝 Talleres 1er Corte")
+                # Filtramos Ta1 a Ta6
+                t_cols_1 = [c for c in df_actual.columns if c.startswith('Ta') and c in [f'Ta{i}' for i in range(1, 7)] and row[c] > 0]
+                if t_cols_1:
+                    mapping = {c: f"Taller No {c.replace('Ta','')}" for c in t_cols_1}
+                    st.dataframe(est[t_cols_1].rename(columns=mapping).style.format("{:.1f}"), use_container_width=True, hide_index=True)
+
+            with tab2:
+                c2_cols = st.columns(4)
+                c2_cols[0].metric("Parcial 3", f"{round_nota(row.get('P3', 0)):.1f}")
+                c2_cols[1].metric("Parcial 4", f"{round_nota(row.get('P4', 0)):.1f}")
+                c2_cols[2].metric("Promedio Talleres", f"{round_nota(row.get('PQT2', 0)):.1f}")
+                c2_cols[3].metric("Nota 2do Corte", f"{round_nota(row.get('2CTE', 0)):.1f}")
+
+                st.subheader("📝 Talleres 2do Corte")
+                # Filtramos Ta7 en adelante
+                t_cols_2 = [c for c in df_actual.columns if c.startswith('Ta') and c not in [f'Ta{i}' for i in range(1, 7)] and row[c] > 0]
+                if t_cols_2:
+                    mapping = {c: f"Taller No {c.replace('Ta','')}" for c in t_cols_2}
+                    st.dataframe(est[t_cols_2].rename(columns=mapping).style.format("{:.1f}"), use_container_width=True, hide_index=True)
+                else:
+                    st.info("Aún no se han registrado talleres para el segundo corte.")
+
+            with tab3:
+                st.subheader("🔮 ¿Qué necesitas para pasar?")
+                nota_necesaria = max((3.0 - puntos_c1) / 0.5, 0.0)
+                if puntos_totales >= 3.0:
+                    st.balloons()
+                    st.success(f"¡Felicidades! Ya has aprobado la materia con una nota proyectada de {puntos_totales:.2f}")
+                else:
+                    st.warning(f"Para aprobar con 3.0, necesitas obtener al menos un **{nota_necesaria:.2f}** en el promedio del Segundo Corte.")
+
+        else:
+            st.warning("⚠️ ID no encontrado.")
