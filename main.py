@@ -2,6 +2,27 @@ import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
 
+
+# 1. EL DICCIONARIO DEBE IR AQUÍ (Antes de ser usado)
+MAPA_CURSOS = {
+    "60299": "Matemáticas II",
+    "55546": "Matemáticas II",
+    "62529": "Matemáticas II",
+    "55581": "Cálculo Diferencial",
+    "63507": "Estadística Inferencial y Muestreo"
+}
+
+# 2. CONFIGURACIÓN ESTÉTICA (CSS)
+st.markdown("""
+    <style>
+    /* ... tu CSS ... */
+    [data-testid="stMetricLabel"] p { 
+        color: #E0E0E0 !important; 
+        font-size: 1.1rem !important; 
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # Configuración estética
 st.set_page_config(page_title="Vanguard Notes | Portal Académico", layout="wide")
 
