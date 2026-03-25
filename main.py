@@ -65,64 +65,57 @@ if dict_cursos:
             st.markdown(f"### Bienvenid@, <span style='color:#00F2FF'>{nombre_u}</span>", unsafe_allow_html=True)
             st.markdown(f"**Asignatura:** {nombre_materia} | **NRC:** {nrc_sel}")
 
-            # --- SECCIÓN 1: KPIs ---
+            # --- SECCIÓN 1: KPIs 
             st.divider()
             cols = st.columns(4)
-            cols[0].metric("Parcial 1 (P1)", f"{row.get('P1', 0):.1f}")
-            cols[1].metric("Parcial 2 (P2)", f"{row.get('P2', 0):.1f}")
+            cols[0].metric("Parcial 1 (P1)", f"{row.get('P1', 0):.2f}")
+            cols[1].metric("Parcial 2 (P2)", f"{row.get('P2', 0):.2f}")
             
-            # Lógica dinámica para el tercer KPI
+            # Buscamos PQT1 o PQT según el NRC
             val_pqt = row.get('PQT1', row.get('PQT', 0))
             label_pqt = "Promedio PQT"
+            
+            # Prioridad para CN (Nivelación) si existe nota registrada
             if 'CN' in row and row['CN'] > 0:
-                val_pqt, label_pqt = row['CN'], "Nivelación (CN)"
-            elif 'PA' in row and row['PA'] > 0:
-                val_pqt, label_pqt = row['PA'], "Proyecto (PA)"
-                
-            cols[2].metric(label_pqt, f"{val_pqt:.1f}")
-            cols[3].metric("NOTA 1er CORTE", f"{row['1CTE']:.1f}")
+                cols[2].metric("Nivelación (CN)", f"{row['CN']:.2f}")
+            else:
+                cols[2].metric(label_pqt, f"{val_pqt:.2f}")
+            
+            cols[3].metric("NOTA 1er CORTE", f"{row['1CTE']:.2f}")
 
-            # --- SECCIÓN 2: TABLA DETALLADA (FILTRADA) ---
-            st.subheader("📋 Registro de Calificaciones")
+            # --- SECCIÓN 2: REGISTRO DE TALLERES (Update Líneas 98-117) ---
+            st.subheader("📝 Registro Detallado: Talleres y Quices")
             
-            # Definimos columnas a omitir (ID, NRC y variaciones de Nombre)
-            cols_a_omitir = ['ID', 'NRC', 'NOMBRE', 'Nombre', 'nombre', 'estudiante', 'ESTUDIANTE']
-            
-            # Filtramos columnas: que no estén en la lista de omisión y que tengan nota > 0
-            cols_notas = []
+            # Filtramos solo columnas que sean talleres o quices y tengan nota real
+            cols_detalle = []
             for col in df_actual.columns:
-                if col not in cols_a_omitir:
-                    # Incluimos 'No' siempre si existe, de lo contrario validamos que sea numérico y > 0
-                    if col == 'No' or (pd.api.types.is_number(row[col]) and row[col] > 0):
-                        cols_notas.append(col)
+                # Mantenemos 'No' para orden, y filtramos por prefijos Ta o Q
+                if col == 'No' or col.startswith(('Ta', 'Q')):
+                    # Solo si el estudiante tiene una nota registrada (mayor a 0)
+                    if pd.api.types.is_number(row[col]) and row[col] > 0:
+                        cols_detalle.append(col)
             
-            # Renderizamos la tabla solo con los datos del estudiante
+            # Presentación elegante de la fila de detalles
             st.dataframe(
-                est[cols_notas].style.format(
-                    # Formateamos con 1 decimal solo las que no sean 'No'
-                    formatter="{:.1f}", 
-                    subset=[c for c in cols_notas if c != 'No']
+                est[cols_detalle].style.format(
+                    formatter="{:.2f}", 
+                    subset=[c for c in cols_detalle if c != 'No']
                 ), 
                 use_container_width=True,
-                hide_index=True # Ocultamos el índice de pandas para más limpieza
+                hide_index=True
             )
 
-            # --- SECCIÓN 3: PROGRESO GLOBAL ---
+            # --- SECCIÓN 3: PROGRESO (Update Líneas 120-128) ---
             st.divider()
-            st.subheader("📈 Evolución hacia la Aprobación")
-            # 1er corte = 50% de la nota final. Meta = 3.0 total.
-            puntos_acumulados = row['1CTE'] * 0.5
-            progreso_meta = min(puntos_acumulados / 3.0, 1.0)
+            st.subheader("📈 Estado de Aprobación Semestral")
+            puntos_actuales = row['1CTE'] * 0.5
+            porcentaje = min(puntos_actuales / 3.0, 1.0)
             
-            st.progress(progreso_meta)
-            st.write(f"Has acumulado **{puntos_acumulados:.2f}** puntos de los **3.0** necesarios para aprobar el semestre.")
+            st.progress(porcentaje)
+            st.write(f"Has acumulado **{puntos_actuales:.2f}** / 3.0 puntos necesarios.")
             
-            if puntos_acumulados >= 1.5:
-                st.success("✅ Estás en la zona segura. Mantén el ritmo en el segundo corte.")
+            # Mensaje de feedback elegante
+            if puntos_actuales >= 1.5:
+                st.success("✨ Excelente desempeño en este corte. Vas por encima de la media requerida.")
             else:
-                st.warning("⚠️ Atención: Debes mejorar tu promedio en el segundo corte para alcanzar el 3.0.")
-
-        else:
-            st.warning("⚠️ ID no encontrado en este NRC.")
-else:
-    st.info("Aguardando conexión con el archivo 'app_notas.xlsx'...")
+                st.info("💡 Recuerda que el segundo corte es una oportunidad para fortalecer tu promedio global.")
