@@ -3,40 +3,51 @@ import pandas as pd
 import plotly.graph_objects as go
 
 # Configuración de página
-st.set_page_config(page_title="Vanguard Notes | Student Portal", layout="wide")
+st.set_page_config(page_title="Vanguard Notes | Sistema de Gestión", layout="wide")
 
 # --- ESTILO VANGUARDISTA (CSS) ---
 st.markdown("""
     <style>
     .main { background-color: #0E1117; color: #FFFFFF; }
-    .stMetric { background-color: #161B22; border-radius: 15px; border: 1px solid #30363D; padding: 20px; }
-    [data-testid="stMetricValue"] { color: #00F2FF !important; font-family: 'JetBrains Mono', monospace; }
+    .stMetric { background-color: #161B22; border-radius: 12px; border: 1px solid #30363D; padding: 15px; }
+    [data-testid="stMetricValue"] { color: #00F2FF !important; font-size: 28px; }
     .stProgress > div > div > div > div { background-image: linear-gradient(to right, #7000FF , #00F2FF); }
-    h1, h2, h3 { color: #00F2FF; text-transform: uppercase; letter-spacing: 2px; }
+    h1, h2, h3 { color: #00F2FF; font-family: 'Inter', sans-serif; font-weight: 700; }
+    .styled-table { width: 100%; border-collapse: collapse; margin: 25px 0; font-size: 0.9em; min-width: 400px; border-radius: 5px 5px 0 0; overflow: hidden; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- CARGA DE DATOS ---
+# --- MAPEO DE ASIGNATURAS POR NRC ---
+MAPA_CURSOS = {
+    "60299": "Matemáticas II",
+    "55546": "Matemáticas II",
+    "62529": "Matemáticas II",
+    "55581": "Cálculo Diferencial",
+    "63507": "Estadística Inferencial y Muestreo"
+}
+
 @st.cache_data
 def load_data():
     file_path = "app_notas.xlsx"
     try:
         xls = pd.ExcelFile(file_path, engine='openpyxl')
-        # Retorna un diccionario donde la llave es el nombre del curso (pestaña)
         return {sheet: xls.parse(sheet) for sheet in xls.sheet_names}
     except Exception as e:
-        st.error(f"Error: No se encontró '{file_path}'. Asegúrate de subirlo a GitHub.")
+        st.error(f"Error al cargar el archivo: {e}")
         return None
 
 dict_cursos = load_data()
 
-# --- BARRA LATERAL (FILTROS) ---
-st.sidebar.title("🧬 VANGUARD AI")
+# --- BARRA LATERAL ---
+st.sidebar.title("💎 VANGUARD PORTAL")
 if dict_cursos:
-    curso_sel = st.sidebar.selectbox("Seleccione la Asignatura", list(dict_cursos.keys()))
-    id_estudiante = st.sidebar.text_input("Identificación del Estudiante", placeholder="Ej: 123456")
+    nrc_sel = st.sidebar.selectbox("Seleccione el NRC del Curso", list(dict_cursos.keys()))
+    nombre_materia = MAPA_CURSOS.get(str(nrc_sel), "Asignatura General")
+    st.sidebar.markdown(f"**Materia:** {nombre_materia}")
+    
+    id_estudiante = st.sidebar.text_input("Ingrese su ID de Estudiante")
 
-    df_actual = dict_cursos[curso_sel].fillna(0)
+    df_actual = dict_cursos[nrc_sel].fillna(0)
     df_actual['ID'] = df_actual['ID'].astype(str)
 
     if id_estudiante:
@@ -44,81 +55,65 @@ if dict_cursos:
 
         if not est.empty:
             row = est.iloc[0]
-            st.title(f"Dashboard de Rendimiento")
-            st.markdown(f"**Estudiante ID:** `{id_estudiante}` | **Curso:** {curso_sel}")
+            st.title(f"Dashboard: {nombre_materia}")
+            st.caption(f"Estudiante ID: {id_estudiante} | NRC: {nrc_sel}")
 
-            # --- SECCIÓN 1: MÉTRICAS PRINCIPALES ---
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Parcial 1 (P1)", f"{row['P1']:.1f}")
-            with col2:
-                st.metric("Parcial 2 (P2)", f"{row['P2']:.1f}")
-            with col3:
-                st.metric("Nota 1er Corte (1CTE)", f"{row['1CTE']:.1f}")
-
-            # --- SECCIÓN 2: BARRA DE PROGRESO GLOBAL ---
-            st.divider()
-            st.subheader("🏁 Evolución del Semestre (Hacia el 3.0)")
-            # El 1er corte aporta el 50% de la nota final (máximo 2.5 puntos de 5.0)
-            puntos_acumulados = row['1CTE'] * 0.5
-            porcentaje_meta = min(puntos_acumulados / 3.0, 1.0)
+            # --- SECCIÓN 1: KPIs (METAS PRINCIPALES) ---
+            st.subheader("📌 Resumen de Corte")
+            cols = st.columns(4)
+            cols[0].metric("Parcial 1 (P1)", f"{row.get('P1', 0):.1f}")
+            cols[1].metric("Parcial 2 (P2)", f"{row.get('P2', 0):.1f}")
             
-            st.progress(porcentaje_meta)
-            st.write(f"Has acumulado **{puntos_acumulados:.2f}** puntos de los **3.0** necesarios para aprobar.")
-
-            # --- SECCIÓN 3: GRÁFICO DE RADAR ---
-            st.divider()
-            col_a, col_b = st.columns([1.5, 1])
+            # Mostrar CN o PA si existen en el dataset
+            if 'CN' in row and row['CN'] > 0:
+                cols[2].metric("Nivelación (CN)", f"{row['CN']:.1f}")
+            elif 'PA' in row and row['PA'] > 0:
+                cols[2].metric("Proyecto (PA)", f"{row['PA']:.1f}")
+            else:
+                # Si no hay CN/PA, mostrar el promedio de quices/talleres PQT
+                val_pqt = row.get('PQT1', row.get('PQT', 0))
+                cols[2].metric("Promedio PQT", f"{val_pqt:.1f}")
             
-            with col_a:
-                st.subheader("🎯 Comparativa de Capacidades")
-                promedio_grupo = df_actual[['P1', 'P2', '1CTE']].mean()
-                
+            cols[3].metric("NOTA 1er CORTE", f"{row['1CTE']:.1f}", delta="Corte Actual")
+
+            # --- SECCIÓN 2: TABLA DE NOTAS FILTRADA (Vanguardista) ---
+            st.divider()
+            st.subheader("📋 Registro Detallado de Notas")
+            
+            # Filtramos solo las columnas que tengan un valor mayor a 0 para este estudiante
+            # Excluimos ID para la tabla
+            cols_con_datos = [c for c in df_actual.columns if c != 'ID' and row[c] > 0]
+            tabla_estudiante = est[cols_con_datos]
+            
+            st.dataframe(tabla_estudiante.style.format("{:.1f}").background_gradient(cmap='Blues'), use_container_width=True)
+
+            # --- SECCIÓN 3: PROGRESO Y RADAR ---
+            col_left, col_right = st.columns([1, 1])
+            
+            with col_left:
+                st.subheader("📈 Evolución Global")
+                # Cálculo de progreso hacia el 3.0 (Asumiendo 1CTE es el 50%)
+                progreso = (row['1CTE'] * 0.5) / 3.0
+                st.progress(min(progreso, 1.0))
+                st.write(f"Has completado el **{min(progreso*100, 100.0):.1f}%** del camino requerido para aprobar el semestre.")
+
+            with col_right:
+                # Gráfico de Radar comparando con el promedio del curso
+                promedio_nrc = df_actual[['P1', 'P2', '1CTE']].mean()
                 fig = go.Figure()
-                # Capa Estudiante
                 fig.add_trace(go.Scatterpolar(
                     r=[row['P1'], row['P2'], row['1CTE']],
-                    theta=['Parcial 1', 'Parcial 2', 'Corte Final'],
-                    fill='toself', name='Tus Resultados', line_color='#00F2FF'
+                    theta=['P1', 'P2', '1er Corte'], fill='toself', name='Tú', line_color='#00F2FF'
                 ))
-                # Capa Promedio
                 fig.add_trace(go.Scatterpolar(
-                    r=[promedio_grupo['P1'], promedio_grupo['P2'], promedio_grupo['1CTE']],
-                    theta=['Parcial 1', 'Parcial 2', 'Corte Final'],
-                    fill='toself', name='Promedio Clase', line_color='#7000FF', opacity=0.4
+                    r=[promedio_nrc['P1'], promedio_nrc['P2'], promedio_nrc['1CTE']],
+                    theta=['P1', 'P2', '1er Corte'], fill='toself', name='Promedio NRC', line_color='#7000FF', opacity=0.5
                 ))
-                
-                fig.update_layout(
-                    polar=dict(radialaxis=dict(visible=True, range=[0, 5], gridcolor="#30363D")),
-                    template="plotly_dark", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)'
-                )
+                fig.update_layout(polar=dict(radialaxis=dict(visible=True, range=[0, 5])), template="plotly_dark", 
+                                  margin=dict(l=40, r=40, t=20, b=20), height=300)
                 st.plotly_chart(fig, use_container_width=True)
 
-            with col_b:
-                st.subheader("📝 Detalle de Talleres")
-                # Identifica dinámicamente columnas de talleres y quices
-                cols_extra = [c for c in df_actual.columns if any(x in c for x in ['Ta', 'Q', 'CN', 'PQT'])]
-                if cols_extra:
-                    for col in cols_extra:
-                        st.write(f"**{col}:** {row[col]}")
-                else:
-                    st.info("No hay talleres registrados aún.")
-
-            # --- SECCIÓN 4: SIMULADOR ---
-            st.divider()
-            st.subheader("🔮 Simulador de Aprobación")
-            meta_2do_corte = st.slider("¿Qué nota esperas promediar en el segundo corte?", 0.0, 5.0, 3.0, 0.1)
-            nota_final_est = puntos_acumulados + (meta_2do_corte * 0.5)
-            
-            if nota_final_est >= 3.0:
-                st.balloons()
-                st.success(f"Con un {meta_2do_corte} en el segundo corte, tu nota final sería **{nota_final_est:.2f}**. ¡Aprobado!")
-            else:
-                st.error(f"Tu nota final sería **{nota_final_est:.2f}**. Necesitas un promedio más alto en el segundo corte.")
-
         else:
-            st.warning("⚠️ ID no encontrado en esta asignatura.")
-    else:
-        st.info("Ingresa tu ID en el panel izquierdo para visualizar tus notas.")
+            st.warning("⚠️ ID no encontrado en este NRC.")
 else:
-    st.warning("Aguardando carga del archivo de datos...")
+    st.error("Archivo 'app_notas.xlsx' no detectado.")
