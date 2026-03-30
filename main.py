@@ -135,21 +135,57 @@ if dict_cursos:
                 nrc_limpio = str(nrc_sel).replace("NRC", "").strip()
                 st.write(f"📖 **{MAPA_CURSOS.get(nrc_limpio, 'Asignatura General')}** | NRC: {nrc_sel}")
 
-                # --- PROGRESO GLOBAL ---
-                p_c1 = round_nota(row.get('1CTE', 0)) * 0.5
+                # --- LÓGICA DE SEMÁFORO INTELIGENTE ---
+                # 1CTE es la nota del primer corte (0-5). Aporta el 50% (0-2.5 puntos)
+                p_c1 = round_nota(row.get('1CTE', 0)) * 0.5 
+                # 2CTE es lo que lleva en el segundo corte (0-5). Aporta el otro 50%
                 p_c2 = round_nota(row.get('2CTE', 0)) * 0.5
                 total = p_c1 + p_c2
-                color_b = "#00FF41" if total >= 3.0 else "#00F2FF"
                 
+                # Cálculo de cuánto necesita promediar en el Corte 2 para llegar a 3.0
+                # Fórmula: (3.0 - puntos_obtenidos_en_C1) / 0.5
+                nota_necesaria = (3.0 - p_c1) / 0.5
+                
+                # Determinar color y mensaje basado en el riesgo
+                if total >= 3.0:
+                    color_b = "#00FF41"  # Verde Neón (Ya pasó)
+                    status_txt = "¡MATERIA APROBADA! 🎉"
+                elif nota_necesaria > 4.0:
+                    color_b = "#FF3131"  # Rojo (Riesgo Alto)
+                    status_txt = "RIESGO ALTO: Necesitas esforzarte al máximo"
+                elif nota_necesaria > 2.5:
+                    color_b = "#FFAC1C"  # Naranja (Esfuerzo moderado)
+                    status_txt = "ADVERTENCIA: No bajes la guardia"
+                else:
+                    color_b = "#00FF41"  # Verde (Zona segura)
+                    status_txt = "ZONA SEGURA: Te falta muy poco"
+
+                # --- VISUALIZACIÓN ---
                 st.markdown(f"""
-                    <div style="width: 100%; background-color: #333; border-radius: 20px; height: 20px; margin-top: 10px;">
-                        <div style="width: {min((total/5)*100, 100)}%; background-color: {color_b}; height: 100%; border-radius: 20px; box-shadow: 0 0 10px {color_b}; transition: width 1s;"></div>
+                    <div style="margin-bottom: 5px;">
+                        <span style="color:{color_b}; font-weight:bold; font-size:1rem;">{status_txt}</span>
+                    </div>
+                    <div style="width: 100%; background-color: #333; border-radius: 20px; height: 22px;">
+                        <div style="width: {min((total/5)*100, 100)}%; 
+                                    background-color: {color_b}; 
+                                    height: 100%; 
+                                    border-radius: 20px; 
+                                    box-shadow: 0 0 15px {color_b}; 
+                                    transition: width 1.5s ease-in-out;">
+                        </div>
                     </div>
                 """, unsafe_allow_html=True)
-                st.write(f"Nota Acumulada Actual: **{total:.2f} / 5.0**")
+                
+                # Texto informativo dinámico
+                if total < 3.0:
+                    st.write(f"Nota actual: **{total:.2f}** | Necesitas promediar **{max(0, nota_necesaria):.2f}** en el 2do Corte para pasar.")
+                else:
+                    st.write(f"Nota actual: **{total:.2f}** | ¡Felicidades, ya cumpliste la meta!")
+                
+                st.divider()
 
                 # --- PESTAÑAS ---
-                t1, t2, t3 = st.tabs(["📌 Corte 1", "🚀 Corte 2", "🎯 Simulador"])
+                t1, t2, t3 = st.tabs(["📌 Corte 1", "🚀 Corte 2", "🎯 Simulador Nota definitiva"])
                 
                 with t1:
                     c1 = st.columns(4)
