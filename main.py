@@ -13,12 +13,12 @@ MAPA_CURSOS = {
     "63507": "Estadística Inferencial y Muestreo"
 }
 
-# 3. ESTILO CSS RESTAURADO (Para visibilidad en fondo negro)
+# 3. ESTILO CSS AVANZADO (KPIs y Tarjetas de Talleres)
 st.markdown("""
     <style>
     .main { background-color: #0E1117; color: #FFFFFF; }
     
-    /* Estilo de las cajas de métricas (KPIs) */
+    /* Estilo de los KPIs Principales */
     [data-testid="stMetric"] {
         background-color: #161B22 !important;
         border: 1px solid #30363D !important;
@@ -26,22 +26,43 @@ st.markdown("""
         padding: 15px !important;
         box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
     }
-    
-    /* Color de los Títulos (Parcial 1, etc.) - BLANCO para que se vea */
     [data-testid="stMetricLabel"] p {
         color: #E0E0E0 !important;
         font-size: 1rem !important;
-        font-weight: 600 !important;
+        font-weight: 700 !important;
         text-transform: uppercase !important;
     }
-    
-    /* Color de los Números - AZUL NEÓN */
     [data-testid="stMetricValue"] {
         color: #00F2FF !important;
-        font-family: 'Courier New', monospace !important;
     }
-    
-    h1, h2, h3 { color: #00F2FF; }
+
+    /* Estilo para las "Tarjetas" de Talleres (Moderno) */
+    .taller-card {
+        background-color: #1c2128;
+        border: 1px solid #444c56;
+        border-radius: 8px;
+        padding: 10px;
+        text-align: center;
+        margin-bottom: 10px;
+        transition: transform 0.3s;
+    }
+    .taller-card:hover {
+        border-color: #00F2FF;
+        transform: translateY(-3px);
+    }
+    .taller-label {
+        color: #8b949e;
+        font-size: 0.8rem;
+        font-weight: bold;
+        text-transform: uppercase;
+        display: block;
+        margin-bottom: 5px;
+    }
+    .taller-value {
+        color: #00F2FF;
+        font-size: 1.2rem;
+        font-weight: bold;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -53,7 +74,6 @@ def load_data():
         data = {}
         for sheet in xls.sheet_names:
             df = xls.parse(sheet)
-            # Normalización de columnas
             df.columns = [str(c).strip().upper() for c in df.columns]
             for col in df.columns:
                 if col not in ['NOMBRE', 'ID', 'NRC']:
@@ -69,7 +89,7 @@ def round_nota(val):
 
 dict_cursos = load_data()
 
-# --- BARRA LATERAL ---
+# --- INTERFAZ ---
 st.sidebar.title("💎 VANGUARD PORTAL")
 if dict_cursos:
     nrc_sel = st.sidebar.selectbox("Seleccione el NRC", list(dict_cursos.keys()))
@@ -79,80 +99,85 @@ if dict_cursos:
 
     if id_estudiante:
         df_actual = dict_cursos[nrc_sel]
-        
-        # Búsqueda segura de ID
-        col_id = 'ID' if 'ID' in df_actual.columns else None
-        
-        if col_id:
-            df_actual[col_id] = df_actual[col_id].astype(str).str.strip()
-            est = df_actual[df_actual[col_id].str.contains(id_estudiante, case=False, na=False)]
+        if 'ID' in df_actual.columns:
+            df_actual['ID'] = df_actual['ID'].astype(str).str.strip()
+            est = df_actual[df_actual['ID'] == id_estudiante]
 
             if not est.empty:
                 row = est.iloc[0]
-                
-                # Identificar frontera de talleres (P3)
                 todas_cols = list(df_actual.columns)
                 idx_p3 = todas_cols.index('P3') if 'P3' in todas_cols else len(todas_cols)
 
-                # --- CABECERA ---
+                # --- CABECERA Y PROGRESO ---
                 st.markdown(f"### Bienvenid@, <span style='color:#00F2FF'>{row.get('NOMBRE', 'Estudiante')}</span>", unsafe_allow_html=True)
-                st.write(f"**{nombre_materia}** | NRC {nrc_sel}")
                 
-                # --- BARRA DE PROGRESO ---
                 p_c1 = round_nota(row.get('1CTE', 0)) * 0.5
                 p_c2 = round_nota(row.get('2CTE', 0)) * 0.5
                 total = p_c1 + p_c2
-                
                 color_b = "#00FF41" if total >= 3.0 else "#00F2FF"
+                
                 st.markdown(f"""
                     <div style="width: 100%; background-color: #333; border-radius: 20px; height: 25px; margin-top: 10px;">
                         <div style="width: {min((total/5)*100, 100)}%; background-color: {color_b}; height: 100%; border-radius: 20px; box-shadow: 0 0 15px {color_b}; transition: width 1s;"></div>
                     </div>
                 """, unsafe_allow_html=True)
-                st.write(f"Nota Acumulada: **{total:.2f} / 5.0**")
-                st.divider()
+                st.write(f"Nota Acumulada Final: **{total:.2f} / 5.0**")
 
-                # --- PESTAÑAS CON KPIs RESTAURADOS ---
-                t1, t2, t3 = st.tabs(["📌 1er Corte", "🚀 2do Corte", "🔮 Simulador"])
+                t1, t2, t3 = st.tabs(["📌 Corte 1", "🚀 Corte 2", "🔮 Simulador"])
                 
                 with t1:
-                    st.subheader("Resultados Consolidados")
                     c1 = st.columns(4)
                     c1[0].metric("Parcial 1", f"{round_nota(row.get('P1', 0)):.1f}")
                     c1[1].metric("Parcial 2", f"{round_nota(row.get('P2', 0)):.1f}")
                     c1[2].metric("Prom. Talleres", f"{round_nota(row.get('PQT1', 0)):.1f}")
-                    c1[3].metric("Nota 1er Corte", f"{round_nota(row.get('1CTE', 0)):.1f}")
+                    c1[3].metric("Nota Corte 1", f"{round_nota(row.get('1CTE', 0)):.1f}")
                     
-                    st.subheader("📝 Detalle Talleres")
-                    t_cols_1 = [col for col in todas_cols if col.startswith('TA') and todas_cols.index(col) < idx_p3 and row[col] > 0]
-                    if t_cols_1:
-                        st.dataframe(est[t_cols_1].style.format("{:.1f}"), use_container_width=True, hide_index=True)
+                    st.markdown("#### 📝 Detalle de Talleres")
+                    t_cols_1 = [col for col in todas_cols if col.startswith('TA') and todas_cols.index(col) < idx_p3]
+                    
+                    # Mostrar talleres como tarjetas modernas
+                    cols_t = st.columns(7)
+                    for i, col_name in enumerate(t_cols_1):
+                        with cols_t[i % 7]:
+                            st.markdown(f"""
+                                <div class="taller-card">
+                                    <span class="taller-label">Taller {col_name.replace('TA','')}</span>
+                                    <span class="taller-value">{round_nota(row[col_name]):.1f}</span>
+                                </div>
+                            """, unsafe_allow_html=True)
 
                 with t2:
-                    st.subheader("Resultados Consolidados")
                     c2 = st.columns(4)
                     c2[0].metric("Parcial 3", f"{round_nota(row.get('P3', 0)):.1f}")
                     c2[1].metric("Parcial 4", f"{round_nota(row.get('P4', 0)):.1f}")
-                    # En el 2do corte, buscamos la columna PQT que esté después de P3
-                    c2[2].metric("Prom. Talleres", f"{round_nota(row.get('PQT2', 0)):.1f}") 
-                    c2[3].metric("Nota 2do Corte", f"{round_nota(row.get('2CTE', 0)):.1f}")
+                    c2[2].metric("Prom. Talleres", f"{round_nota(row.get('PQT2', 0)):.1f}")
+                    c2[3].metric("Nota Corte 2", f"{round_nota(row.get('2CTE', 0)):.1f}")
                     
-                    st.subheader("📝 Detalle Talleres")
-                    t_cols_2 = [col for col in todas_cols if col.startswith('TA') and todas_cols.index(col) > idx_p3 and row[col] > 0]
+                    st.markdown("#### 📝 Detalle de Talleres")
+                    t_cols_2 = [col for col in todas_cols if col.startswith('TA') and todas_cols.index(col) > idx_p3]
+                    
                     if t_cols_2:
-                        st.dataframe(est[t_cols_2].style.format("{:.1f}"), use_container_width=True, hide_index=True)
+                        cols_t2 = st.columns(7)
+                        for i, col_name in enumerate(t_cols_2):
+                            with cols_t2[i % 7]:
+                                st.markdown(f"""
+                                    <div class="taller-card">
+                                        <span class="taller-label">Taller {col_name.replace('TA','')}</span>
+                                        <span class="taller-value">{round_nota(row[col_name]):.1f}</span>
+                                    </div>
+                                """, unsafe_allow_html=True)
                     else:
-                        st.info("Aún no hay talleres registrados para este corte.")
+                        st.info("Sin registros de talleres en el segundo corte.")
 
                 with t3:
-                    st.subheader("🎯 ¿Qué necesitas?")
+                    st.subheader("🎯 Análisis de Meta")
                     req = (3.0 - p_c1) / 0.5
                     if total >= 3.0:
                         st.balloons()
-                        st.success(f"¡Felicidades! Ya pasaste la materia con {total:.2f}")
+                        st.success(f"¡Felicidades! Materia aprobada.")
                     else:
-                        st.warning(f"Para pasar con 3.0, necesitas promediar **{req:.2f}** en el 2do Corte.")
+                        st.warning(f"Necesitas promediar **{req:.2f}** en el 2do Corte para pasar con 3.0.")
             else:
-                st.warning("Estudiante no encontrado.")
+                st.warning("ID no encontrado.")
         else:
             st.error("Archivo sin columna ID.")
