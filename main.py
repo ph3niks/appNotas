@@ -209,7 +209,7 @@ if dict_cursos:
                     
                     # 4. Lógica dinámica para la posición de PQT1 y 1CTE
                     if tiene_cn:
-                        cols_metricas[2].metric("Nota CN", f"{round_nota(row.get('CN', 0)):.1f}")
+                        cols_metricas[2].metric("Curso Nivelación", f"{round_nota(row.get('CN', 0)):.1f}")
                         idx_pqt = 3
                         idx_corte = 4
                     else:
