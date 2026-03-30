@@ -120,7 +120,7 @@ if dict_cursos:
                     c1 = st.columns(4)
                     c1[0].metric("Parcial 1", f"{round_nota(row.get('P1', 0)):.1f}")
                     c1[1].metric("Parcial 2", f"{round_nota(row.get('P2', 0)):.1f}")
-                    c1[2].metric("Prom. Talleres", f"{round_nota(row.get('PQT', 0)):.1f}")
+                    c1[2].metric("Prom. Talleres", f"{round_nota(row.get('PQT1', 0)):.1f}")
                     c1[3].metric("Nota 1er Corte", f"{round_nota(row.get('1CTE', 0)):.1f}")
                     
                     st.subheader("📝 Detalle Talleres")
@@ -134,7 +134,7 @@ if dict_cursos:
                     c2[0].metric("Parcial 3", f"{round_nota(row.get('P3', 0)):.1f}")
                     c2[1].metric("Parcial 4", f"{round_nota(row.get('P4', 0)):.1f}")
                     # En el 2do corte, buscamos la columna PQT que esté después de P3
-                    c2[2].metric("Prom. Talleres", f"{round_nota(row.get('PQT', 0)):.1f}") 
+                    c2[2].metric("Prom. Talleres", f"{round_nota(row.get('PQT2', 0)):.1f}") 
                     c2[3].metric("Nota 2do Corte", f"{round_nota(row.get('2CTE', 0)):.1f}")
                     
                     st.subheader("📝 Detalle Talleres")
