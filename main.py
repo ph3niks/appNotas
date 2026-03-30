@@ -105,7 +105,7 @@ def round_nota(val):
 dict_cursos = load_data()
 
 # --- INTERFAZ PRINCIPAL (Más visible en móviles) ---
-st.title("💎 PORTAL DE NOTAS")
+st.title("💎 Portal de Notas")
 
 if dict_cursos:
     # Formulario de entrada en la página principal (no en el sidebar)
