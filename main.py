@@ -150,6 +150,9 @@ if dict_cursos:
                 if total >= 3.0:
                     color_b = "#00FF41"  # Verde Neón (Ya pasó)
                     status_txt = "¡MATERIA APROBADA! 🎉"
+                elif nota_necesaria > 5.0:
+                    color_b = "#FF3131"  # Rojo (Riesgo Alto)
+                    status_txt = "Lo siento 😔. Ya no te alcaza para pasar la materia 😵"
                 elif nota_necesaria > 4.0:
                     color_b = "#FF3131"  # Rojo (Riesgo Alto)
                     status_txt = "RIESGO ALTO 🚨: Necesitas esforzarte al máximo"
