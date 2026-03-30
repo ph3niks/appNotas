@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
-import plotly.graph_objects as go
 
-# 1. CONFIGURACIÓN INICIAL
+# 1. CONFIGURACIÓN INICIAL (DEBE SER LA PRIMERA LÍNEA)
 st.set_page_config(page_title="Vanguard Notes | Portal Académico", layout="wide")
 
 # 2. DICCIONARIO DE MATERIAS
@@ -14,7 +13,7 @@ MAPA_CURSOS = {
     "63507": "Estadística Inferencial y Muestreo"
 }
 
-# 3. ESTILO CSS ÚNICO (Vanguardista)
+# 3. ESTILO CSS VANGUARDISTA
 st.markdown("""
     <style>
     .main { background-color: #0E1117; color: #FFFFFF; }
@@ -45,9 +44,9 @@ def load_data():
         data = {}
         for sheet in xls.sheet_names:
             df = xls.parse(sheet)
-            # Limpieza de datos y conversión a numérico
+            # Limpieza: Convertir todo lo que no es texto a número (evita error de fechas)
             for col in df.columns:
-                if col not in ['NOMBRE', 'ID', 'NRC']:
+                if col.strip().upper() not in ['NOMBRE', 'ID', 'NRC']:
                     df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
             data[sheet] = df
         return data
@@ -71,87 +70,87 @@ if dict_cursos:
     if id_estudiante:
         df_actual = dict_cursos[nrc_sel]
         
-        # --- BÚSQUEDA INTELIGENTE DE LA COLUMNA ID (Evita el KeyError) ---
-        col_id = next((c for c in df_actual.columns if c.strip().upper() == 'ID'), None)
+        # --- BÚSQUEDA SEGURA DE LA COLUMNA ID ---
+        # Buscamos cualquier columna que se llame ID (sin importar espacios o minúsculas)
+        col_id_real = next((c for c in df_actual.columns if c.strip().upper() == 'ID'), None)
         
-        if col_id:
-            df_actual[col_id] = df_actual[col_id].astype(str).str.strip()
-            est = df_actual[df_actual[col_id] == id_estudiante]
+        if col_id_real:
+            df_actual[col_id_real] = df_actual[col_id_real].astype(str).str.strip()
+            est = df_actual[df_actual[col_id_real] == id_estudiante]
 
             if not est.empty:
                 row = est.iloc[0]
                 nombre_u = row.get('NOMBRE', row.get('Nombre', 'Estudiante'))
                 
-                # 1. Lógica de posición por columna P3
+                # Identificamos dónde empieza el 2do corte (P3)
                 todas_cols = list(df_actual.columns)
                 idx_p3 = todas_cols.index('P3') if 'P3' in todas_cols else len(todas_cols)
 
-                # 2. Cabecera y Progreso Global
+                # --- CABECERA ---
                 st.markdown(f"### Bienvenid@, <span style='color:#00F2FF'>{nombre_u}</span>", unsafe_allow_html=True)
                 st.write(f"**{nombre_materia}** (NRC {nrc_sel})")
                 
-                st.subheader("📈 Estado de la Materia (Meta 3.0)")
+                # --- BARRA DE PROGRESO DINÁMICA ---
                 puntos_c1 = round_nota(row.get('1CTE', 0)) * 0.5
                 puntos_c2 = round_nota(row.get('2CTE', 0)) * 0.5
                 puntos_totales = puntos_c1 + puntos_c2
                 
-                # Barra Neón Dinámica
                 color_b = "#00FF41" if puntos_totales >= 3.0 else "#00F2FF"
+                
                 st.markdown(f"""
-                    <div style="width: 100%; background-color: #30363D; border-radius: 20px; height: 25px;">
+                    <div style="width: 100%; background-color: #30363D; border-radius: 20px; height: 25px; margin-top: 20px;">
                         <div style="width: {min((puntos_totales/5)*100, 100)}%; background-color: {color_b}; 
                                     height: 100%; border-radius: 20px; transition: width 0.8s;
                                     box-shadow: 0 0 15px {color_b};">
                         </div>
                     </div>
-                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 5px;">
-                        <span>0.0</span> <span style="color: #00FF41;">META 3.0</span> <span>5.0</span>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; margin-top: 5px; color: #E0E0E0;">
+                        <span>0.0</span> <span style="color: #00FF41; font-weight:bold;">META 3.0</span> <span>5.0</span>
                     </div>
                 """, unsafe_allow_html=True)
                 st.write(f"Puntos acumulados: **{puntos_totales:.2f} / 5.0**")
+                st.divider()
 
-                # 3. Pestañas
+                # --- PESTAÑAS ---
                 t1, t2, t3 = st.tabs(["📌 1er Corte", "🚀 2do Corte", "🎯 Simulador Final"])
 
                 with t1:
-                    st.divider()
                     c = st.columns(4)
                     c[0].metric("Parcial 1", f"{round_nota(row.get('P1', 0)):.1f}")
                     c[1].metric("Parcial 2", f"{round_nota(row.get('P2', 0)):.1f}")
                     c[2].metric("Promedio Talleres", f"{round_nota(row.get('PQT1', row.get('PQT', 0))):.1f}")
                     c[3].metric("Nota 1er Corte", f"{round_nota(row.get('1CTE', 0)):.1f}")
                     
-                    st.subheader("📝 Detalle Talleres (1-6)")
+                    st.subheader("📝 Detalle Talleres")
                     t_c1 = [col for col in todas_cols if col.startswith('Ta') and todas_cols.index(col) < idx_p3 and row[col] > 0]
                     if t_c1:
                         st.dataframe(est[t_c1].rename(columns={x: f"Taller {x[2:]}" for x in t_c1}).style.format("{:.1f}"), use_container_width=True, hide_index=True)
 
                 with t2:
-                    st.divider()
                     c = st.columns(4)
                     c[0].metric("Parcial 3", f"{round_nota(row.get('P3', 0)):.1f}")
                     c[1].metric("Parcial 4", f"{round_nota(row.get('P4', 0)):.1f}")
                     c[2].metric("Promedio Talleres", f"{round_nota(row.get('PQT2', 0)):.1f}")
                     c[3].metric("Nota 2do Corte", f"{round_nota(row.get('2CTE', 0)):.1f}")
                     
-                    st.subheader("📝 Detalle Talleres (7+)")
+                    st.subheader("📝 Detalle Talleres")
                     t_c2 = [col for col in todas_cols if col.startswith('Ta') and todas_cols.index(col) > idx_p3 and row[col] > 0]
                     if t_c2:
                         st.dataframe(est[t_c2].rename(columns={x: f"Taller {x[2:]}" for x in t_c2}).style.format("{:.1f}"), use_container_width=True, hide_index=True)
                     else:
-                        st.info("Aún no hay registros para el segundo corte.")
+                        st.info("Aún no hay registros de talleres para el segundo corte.")
 
                 with t3:
                     st.subheader("🔮 Proyección de Resultados")
                     req = (3.0 - puntos_c1) / 0.5
                     if puntos_totales >= 3.0:
                         st.balloons()
-                        st.success(f"¡Felicidades! Ya aprobaste la materia con {puntos_totales:.2f}")
+                        st.success(f"¡Felicidades! Ya aprobaste la materia con **{puntos_totales:.2f}**")
                     else:
                         if req > 5.0:
-                            st.error(f"Necesitas un {req:.2f}. Situación muy difícil.")
+                            st.error(f"Necesitas un promedio de {req:.2f} en el 2do corte para pasar. Situación crítica.")
                         else:
-                            st.warning(f"Necesitas promediar **{req:.2f}** en el 2do corte para pasar con 3.0.")
+                            st.warning(f"Para aprobar con 3.0, necesitas promediar **{req:.2f}** en el 2do corte.")
             else:
                 st.warning("⚠️ ID no encontrado en este curso.")
         else:
