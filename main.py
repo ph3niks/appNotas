@@ -20,7 +20,7 @@ st.markdown("""
     
     /* Nombre del estudiante - Color Plata Azulado Moderno */
     .user-welcome {
-        color: #A9B7C6;
+        color: #0755F2;
         font-family: 'Inter', sans-serif;
         font-weight: 600;
         font-size: 1.8rem;
@@ -155,7 +155,7 @@ if dict_cursos:
                     c1 = st.columns(4)
                     c1[0].metric("Parcial 1", f"{round_nota(row.get('P1', 0)):.1f}")
                     c1[1].metric("Parcial 2", f"{round_nota(row.get('P2', 0)):.1f}")
-                    c1[2].metric("Prom. PQT1", f"{round_nota(row.get('PQT1', 0)):.1f}")
+                    c1[2].metric("Promedio Talleres", f"{round_nota(row.get('PQT1', 0)):.1f}")
                     c1[3].metric("Nota Corte 1", f"{round_nota(row.get('1CTE', 0)):.1f}")
                     
                     st.markdown("#### 📝 Detalle de Talleres")
@@ -171,7 +171,7 @@ if dict_cursos:
                     c2 = st.columns(4)
                     c2[0].metric("Parcial 3", f"{round_nota(row.get('P3', 0)):.1f}")
                     c2[1].metric("Parcial 4", f"{round_nota(row.get('P4', 0)):.1f}")
-                    c2[2].metric("Prom. PQT2", f"{round_nota(row.get('PQT2', 0)):.1f}")
+                    c2[2].metric("Promedio Talleres", f"{round_nota(row.get('PQT2', 0)):.1f}")
                     c2[3].metric("Nota Corte 2", f"{round_nota(row.get('2CTE', 0)):.1f}")
                     
                     st.markdown("#### 📝 Detalle de Talleres")
