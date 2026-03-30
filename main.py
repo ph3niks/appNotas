@@ -79,20 +79,31 @@ if dict_cursos:
             row = est.iloc[0]
             nombre_u = row.get('NOMBRE', row.get('Nombre', 'Estudiante'))
             
-            # CABECERA Y PROGRESO (GLOBAL)
-            st.markdown(f"### Bienvenid@, <span style='color:#00F2FF'>{nombre_u}</span>", unsafe_allow_html=True)
-            st.markdown(f"**Asignatura:** {nombre_materia} | **NRC:** {nrc_sel}")
+            # --- SECCIÓN DE PROGRESO GLOBAL ---
+            st.subheader("📈 Estado de la Materia (Escala 0.0 - 5.0)")
             
-            # Barra de progreso siempre visible
+            # Calculamos los puntos sobre 5.0 (Corte 1 vale 2.5 max, Corte 2 vale 2.5 max)
             puntos_c1 = round_nota(row.get('1CTE', 0)) * 0.5
             puntos_c2 = round_nota(row.get('2CTE', 0)) * 0.5
             puntos_totales = puntos_c1 + puntos_c2
-            progreso_visual = min(puntos_totales / 3.0, 1.0)
             
-            st.subheader("📈 Progreso Hacia la Aprobación (Meta 3.0)")
-            st.progress(progreso_visual)
-            st.write(f"Puntos acumulados: **{puntos_totales:.2f}** de 3.0")
-            st.divider()
+            # Color dinámico: Azul si no ha pasado, Verde si ya superó el 3.0
+            color_barra = "#00F2FF" if puntos_totales < 3.0 else "#00FF41" 
+            
+            # Creamos una barra personalizada con HTML para permitir el cambio de color
+            st.markdown(f"""
+                <div style="width: 100%; background-color: #30363D; border-radius: 20px; height: 25px; margin-bottom: 10px;">
+                    <div style="width: {(puntos_totales/5)*100}%; background-color: {color_barra}; height: 100%; border-radius: 20px; transition: width 0.5s;">
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span>0.0</span>
+                    <span style="color: #00FF41; font-weight: bold;">| Meta: 3.0</span>
+                    <span>5.0</span>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            st.write(f"Nota acumulada actual: **{puntos_totales:.2f}**")
 
             # --- SISTEMA DE PESTAÑAS ---
             tab1, tab2, tab3 = st.tabs(["📌 1er Corte", "🚀 2do Corte", "🎯 Simulador Final"])
@@ -128,13 +139,26 @@ if dict_cursos:
                     st.info("Aún no se han registrado talleres para el segundo corte.")
 
             with tab3:
-                st.subheader("🔮 ¿Qué necesitas para pasar?")
-                nota_necesaria = max((3.0 - puntos_c1) / 0.5, 0.0)
+                st.subheader("🔮 Simulador de Supervivencia")
+                
+                # Cálculo de lo que falta para el 3.0
+                # Formula: (3.0 - (NotaCorte1 * 0.5)) / 0.5
+                nota_necesaria = (3.0 - puntos_c1) / 0.5
+                
                 if puntos_totales >= 3.0:
                     st.balloons()
-                    st.success(f"¡Felicidades! Ya has aprobado la materia con una nota proyectada de {puntos_totales:.2f}")
+                    st.success(f"🎊 **¡ZONA SEGURA!** Ya has aprobado la materia. Tu nota actual es **{puntos_totales:.2f}**.")
+                    st.info("Todo lo que saques en el segundo corte subirá tu promedio final.")
                 else:
-                    st.warning(f"Para aprobar con 3.0, necesitas obtener al menos un **{nota_necesaria:.2f}** en el promedio del Segundo Corte.")
+                    if nota_necesaria > 5.0:
+                        st.error(f"⚠️ Situación Crítica: Necesitarías un **{nota_necesaria:.2f}** para pasar, lo cual supera el máximo de 5.0.")
+                    else:
+                        st.warning(f"🎯 Para aprobar con **3.0**, el promedio de tu Segundo Corte debe ser de al menos: **{nota_necesaria:.2f}**")
+                        
+                        # Visualización de esfuerzo
+                        esfuerzo = (nota_necesaria / 5.0)
+                        st.write("Nivel de esfuerzo requerido:")
+                        st.progress(min(esfuerzo, 1.0))
 
         else:
             st.warning("⚠️ ID no encontrado.")
