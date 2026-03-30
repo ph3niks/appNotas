@@ -152,13 +152,13 @@ if dict_cursos:
                     status_txt = "¡MATERIA APROBADA! 🎉"
                 elif nota_necesaria > 4.0:
                     color_b = "#FF3131"  # Rojo (Riesgo Alto)
-                    status_txt = "RIESGO ALTO: Necesitas esforzarte al máximo"
-                elif nota_necesaria > 2.5:
-                    color_b = "#FFAC1C"  # Naranja (Esfuerzo moderado)
-                    status_txt = "ADVERTENCIA: No bajes la guardia"
+                    status_txt = "RIESGO ALTO 🚨: Necesitas esforzarte al máximo"
+                elif nota_necesaria > 2.7:
+                    color_b = "#F7B707"  # Naranja (Esfuerzo moderado)
+                    status_txt = "ADVERTENCIA ⚠️: No bajes la guardia"
                 else:
-                    color_b = "#00FF41"  # Verde (Zona segura)
-                    status_txt = "ZONA SEGURA: Te falta muy poco"
+                    color_b = "#658F4D"  # Verde (Zona segura)
+                    status_txt = "ZONA SEGURA: Vas muy bien 😀! Te falta muy poco"
 
                 # --- VISUALIZACIÓN ---
                 st.markdown(f"""
