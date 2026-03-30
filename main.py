@@ -116,7 +116,7 @@ if dict_cursos:
         id_estudiante = st.text_input("Ingrese su ID de Estudiante", placeholder="Ej: U00123456").strip()
     
     # Botón de consulta para móviles
-    consultar = st.button("CONSULTAR NOTAS")
+    consultar = st.button("Consultar mis Notas")
 
     if id_estudiante and consultar:
         df_actual = dict_cursos[nrc_sel]
