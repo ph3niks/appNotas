@@ -161,7 +161,7 @@ if dict_cursos:
                     status_txt = "ZONA SEGURA: Vas muy bien 😀! Te falta muy poco"
 
                 # --- VISUALIZACIÓN ---
-                t.markdown(f"""
+                st.markdown(f"""
                     <div style="margin-bottom: 5px; display: flex; justify-content: space-between; align-items: flex-end;">
                         <span style="color:{color_b}; font-weight:bold; font-size:1.1rem;">{status_txt}</span>
                         <span style="color:#8b949e; font-size:0.8rem; font-weight:bold;">META: 3.0</span>
@@ -180,6 +180,7 @@ if dict_cursos:
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
+                        
                 
                 # Texto informativo dinámico
                 if total < 3.0:
