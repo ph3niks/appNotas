@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # 1. CONFIGURACIÓN INICIAL
-st.set_page_config(page_title="Vanguard Notes | Portal Académico", layout="wide")
+st.set_page_config(page_title="Unab | Portal de Notas", layout="wide")
 
 # 2. DICCIONARIO DE MATERIAS
 MAPA_CURSOS = {
@@ -105,7 +105,7 @@ def round_nota(val):
 dict_cursos = load_data()
 
 # --- INTERFAZ PRINCIPAL (Más visible en móviles) ---
-st.title("💎 VANGUARD PORTAL")
+st.title("💎 PORTAL DE NOTAS")
 
 if dict_cursos:
     # Formulario de entrada en la página principal (no en el sidebar)
