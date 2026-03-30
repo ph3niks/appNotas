@@ -197,20 +197,43 @@ if dict_cursos:
                 t1, t2, t3 = st.tabs(["📌 Corte 1", "🚀 Corte 2", "🎯 Simulador Nota definitiva"])
                 
                 with t1:
-                    c1 = st.columns(4)
-                    c1[0].metric("Parcial 1", f"{round_nota(row.get('P1', 0)):.1f}")
-                    c1[1].metric("Parcial 2", f"{round_nota(row.get('P2', 0)):.1f}")
-                    c1[2].metric("Promedio Talleres", f"{round_nota(row.get('PQT1', 0)):.1f}")
-                    c1[3].metric("Nota Corte 1", f"{round_nota(row.get('1CTE', 0)):.1f}")
+                    # 1. Determinamos si existe la columna CN
+                    tiene_cn = 'CN' in todas_cols
                     
+                    # 2. Creamos las columnas necesarias (5 si hay CN, 4 si no)
+                    cols_metricas = st.columns(5 if tiene_cn else 4)
+                    
+                    # 3. Asignamos las métricas fijas
+                    cols_metricas[0].metric("Parcial 1", f"{round_nota(row.get('P1', 0)):.1f}")
+                    cols_metricas[1].metric("Parcial 2", f"{round_nota(row.get('P2', 0)):.1f}")
+                    
+                    # 4. Lógica dinámica para la posición de PQT1 y 1CTE
+                    if tiene_cn:
+                        cols_metricas[2].metric("Nota CN", f"{round_nota(row.get('CN', 0)):.1f}")
+                        idx_pqt = 3
+                        idx_corte = 4
+                    else:
+                        idx_pqt = 2
+                        idx_corte = 3
+                    
+                    # 5. Mostramos el resto de notas en su lugar correspondiente
+                    cols_metricas[idx_pqt].metric("Promedio Talleres", f"{round_nota(row.get('PQT1', 0)):.1f}")
+                    cols_metricas[idx_corte].metric("Nota Corte 1", f"{round_nota(row.get('1CTE', 0)):.1f}")
+                    
+                    # --- DETALLE DE TALLERES ---
                     st.markdown("#### 📝 Detalle de Talleres")
                     t_cols_1 = [col for col in todas_cols if col.startswith('TA') and todas_cols.index(col) < idx_p3]
                     
-                    cols_t = st.columns(min(len(t_cols_1), 7) if len(t_cols_1)>0 else 1)
-                    for i, col_name in enumerate(t_cols_1):
-                        with cols_t[i % 7]:
-                            st.markdown(f"""<div class="taller-card"><span class="taller-label">T{col_name.replace('TA','')}</span>
-                                <span class="taller-value">{round_nota(row[col_name]):.1f}</span></div>""", unsafe_allow_html=True)
+                    if t_cols_1:
+                        cols_t = st.columns(min(len(t_cols_1), 7))
+                        for i, col_name in enumerate(t_cols_1):
+                            with cols_t[i % 7]:
+                                st.markdown(f"""
+                                    <div class="taller-card">
+                                        <span class="taller-label">T{col_name.replace('TA','')}</span>
+                                        <span class="taller-value">{round_nota(row[col_name]):.1f}</span>
+                                    </div>
+                                """, unsafe_allow_html=True)
 
                 with t2:
                     c2 = st.columns(4)
