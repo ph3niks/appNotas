@@ -161,26 +161,31 @@ if dict_cursos:
                     status_txt = "ZONA SEGURA: Vas muy bien 😀! Te falta muy poco"
 
                 # --- VISUALIZACIÓN ---
-                st.markdown(f"""
-                    <div style="margin-bottom: 5px;">
-                        <span style="color:{color_b}; font-weight:bold; font-size:1rem;">{status_txt}</span>
+                t.markdown(f"""
+                    <div style="margin-bottom: 5px; display: flex; justify-content: space-between; align-items: flex-end;">
+                        <span style="color:{color_b}; font-weight:bold; font-size:1.1rem;">{status_txt}</span>
+                        <span style="color:#8b949e; font-size:0.8rem; font-weight:bold;">META: 3.0</span>
                     </div>
-                    <div style="width: 100%; background-color: #333; border-radius: 20px; height: 22px;">
+                    <div style="width: 100%; background-color: #333; border-radius: 20px; height: 24px; position: relative; overflow: hidden;">
                         <div style="width: {min((total/5)*100, 100)}%; 
                                     background-color: {color_b}; 
                                     height: 100%; 
                                     border-radius: 20px; 
                                     box-shadow: 0 0 15px {color_b}; 
-                                    transition: width 1.5s ease-in-out;">
+                                    transition: width 1.5s ease-in-out;
+                                    position: absolute; z-index: 1;">
+                        </div>
+                        <div style="position: absolute; left: 60%; top: 0; width: 2px; height: 100%; 
+                                    background-color: rgba(255,255,255,0.4); z-index: 2;">
                         </div>
                     </div>
                 """, unsafe_allow_html=True)
                 
                 # Texto informativo dinámico
                 if total < 3.0:
-                    st.write(f"Nota actual: **{total:.2f}** | Necesitas promediar **{max(0, nota_necesaria):.2f}** en el 2do Corte para pasar.")
+                    st.write(f"Nota definitiva actual: **{total:.2f}** | Necesitas promediar **{max(0, nota_necesaria):.2f}** en el 2do Corte para pasar.")
                 else:
-                    st.write(f"Nota actual: **{total:.2f}** | ¡Felicidades, ya cumpliste la meta!")
+                    st.write(f"Nota definitiva actual: **{total:.2f}** | ¡Felicidades, ya cumpliste la meta!")
                 
                 st.divider()
 
