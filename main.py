@@ -164,7 +164,7 @@ if dict_cursos:
                 st.markdown(f"""
                     <div style="margin-bottom: 5px; display: flex; justify-content: space-between; align-items: flex-end;">
                         <span style="color:{color_b}; font-weight:bold; font-size:1.1rem;">{status_txt}</span>
-                        <span style="color:#8b949e; font-size:0.8rem; font-weight:bold;">META: 3.0</span>
+                        <span style="color:#8b949e; font-size:0.8rem; font-weight:bold;">Meta mínima: 3.0</span>
                     </div>
                     <div style="width: 100%; background-color: #333; border-radius: 20px; height: 24px; position: relative; overflow: hidden;">
                         <div style="width: {min((total/5)*100, 100)}%; 
@@ -184,7 +184,7 @@ if dict_cursos:
                 
                 # Texto informativo dinámico
                 if total < 3.0:
-                    st.write(f"Nota definitiva actual: **{total:.2f}** | Necesitas promediar **{max(0, nota_necesaria):.2f}** en el 2do Corte para pasar.")
+                    st.write(f"Nota definitiva actual: **{total:.2f}** | Necesitas mínimo  **{max(0, nota_necesaria):.2f}** en el 2do Corte para pasar.")
                 else:
                     st.write(f"Nota definitiva actual: **{total:.2f}** | ¡Felicidades, ya cumpliste la meta!")
                 
