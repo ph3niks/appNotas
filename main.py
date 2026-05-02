@@ -189,28 +189,29 @@ if dict_cursos:
                     components.html("""
                         <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
                         <script>
-                            confetti({
-                                particleCount: 180,
-                                spread: 100,
-                                origin: { y: 0.4 },
-                                colors: ['#00FF41', '#00F2FF', '#FFD700', '#FF69B4', '#ffffff']
-                            });
-                            setTimeout(() => confetti({
-                                particleCount: 80,
-                                angle: 60,
-                                spread: 55,
-                                origin: { x: 0 },
-                                colors: ['#00FF41', '#00F2FF', '#FFD700']
-                            }), 400);
-                            setTimeout(() => confetti({
-                                particleCount: 80,
-                                angle: 120,
-                                spread: 55,
-                                origin: { x: 1 },
-                                colors: ['#00FF41', '#00F2FF', '#FFD700']
-                            }), 600);
+                            window.onload = function() {
+                                confetti({
+                                    particleCount: 180,
+                                    spread: 100,
+                                    origin: { y: 0.4 },
+                                    colors: ['#00FF41', '#00F2FF', '#FFD700', '#FF69B4', '#ffffff']
+                                });
+                                setTimeout(() => confetti({
+                                    particleCount: 80,
+                                    angle: 60,
+                                    spread: 55,
+                                    origin: { x: 0 }
+                                }), 400);
+                                setTimeout(() => confetti({
+                                    particleCount: 80,
+                                    angle: 120,
+                                    spread: 55,
+                                    origin: { x: 1 }
+                                }), 600);
+                            }
                         </script>
-                    """, height=1)
+                        <div style="height:1px"></div>
+                    """, height=80)
                 
                 # Texto informativo dinámico
                 if total < 3.0:
