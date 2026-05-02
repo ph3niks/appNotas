@@ -82,7 +82,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-@st.cache_data
+@st.cache_data(ttl=60)
 def load_data():
     file_path = "app_notas.xlsx"
     try:
@@ -210,7 +210,7 @@ if dict_cursos:
                                 colors: ['#00FF41', '#00F2FF', '#FFD700']
                             }), 600);
                         </script>
-                    """, height=0)
+                    """, height=1)
                 
                 # Texto informativo dinámico
                 if total < 3.0:
