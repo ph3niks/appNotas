@@ -150,19 +150,19 @@ if dict_cursos:
                 # Determinar color y mensaje basado en el riesgo
                 if total >= 3.0:
                     color_b = "#00FF41"  # Verde Neón (Ya pasó)
-                    status_txt = "¡MATERIA APROBADA! 🎉"
+                    status_txt = "¡FELICITACIONES YA HAS APROBADO LA MATERIA! 🎉"
                 elif nota_necesaria > 5.0:
                     color_b = "#FF3131"  # Rojo (Riesgo Alto)
                     status_txt = "Lo siento 😔. Ya no te alcaza para pasar la materia 😵"
-                elif nota_necesaria > 4.0:
+                elif nota_necesaria > 3.7:
                     color_b = "#FF3131"  # Rojo (Riesgo Alto)
                     status_txt = "RIESGO ALTO 🚨: Necesitas esforzarte al máximo"
-                elif nota_necesaria > 2.7:
+                elif nota_necesaria > 2.4:
                     color_b = "#F7B707"  # Naranja (Esfuerzo moderado)
                     status_txt = "ADVERTENCIA ⚠️: No bajes la guardia"
                 else:
                     color_b = "#658F4D"  # Verde (Zona segura)
-                    status_txt = "ZONA SEGURA: Vas muy bien 😀! Te falta muy poco"
+                    status_txt = "ZONA SEGURA: Vas muy bien 😀! Ya te falta muy poco"
 
                 # --- VISUALIZACIÓN ---
                 st.markdown(f"""
@@ -235,7 +235,7 @@ if dict_cursos:
                 st.divider()
 
                 # --- PESTAÑAS ---
-                t1, t2, t3 = st.tabs(["📌 Corte 1", "🚀 Corte 2", "🎯 Simulador Nota definitiva"])
+                t1, t2, t3 = st.tabs(["📌 1ER CORTE", "🚀 2D0 CORTE", "🎯 Simulador Nota definitiva"])
                 
                 with t1:
                     # 1. Determinamos si existe la columna CN
@@ -298,7 +298,7 @@ if dict_cursos:
                     st.subheader("🎯 Proyección Final")
                     req = (3.0 - p_c1) / 0.5
                     if total >= 3.0:
-                        st.success(f"¡Aprobado! Tu nota actual es {total:.2f}")
+                        st.success(f"¡Felicidades ya has Aprobado el curso! Tu nota actual es {total:.2f}")
                     else:
                         st.warning(f"Necesitas promediar **{req:.2f}** en el segundo corte para pasar.")
             else:
