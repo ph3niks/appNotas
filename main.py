@@ -190,24 +190,37 @@ if dict_cursos:
                         <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
                         <script>
                             window.onload = function() {
-                                confetti({
-                                    particleCount: 180,
-                                    spread: 100,
-                                    origin: { y: 0.4 },
-                                    colors: ['#00FF41', '#00F2FF', '#FFD700', '#FF69B4', '#ffffff']
-                                });
-                                setTimeout(() => confetti({
-                                    particleCount: 80,
-                                    angle: 60,
-                                    spread: 55,
-                                    origin: { x: 0 }
-                                }), 400);
-                                setTimeout(() => confetti({
-                                    particleCount: 80,
-                                    angle: 120,
-                                    spread: 55,
-                                    origin: { x: 1 }
-                                }), 600);
+                                // Inyectar el script en el documento padre (Streamlit)
+                                var script = parent.document.createElement('script');
+                                script.src = 'https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js';
+                                script.onload = function() {
+                                    var myConfetti = parent.confetti;
+                                    
+                                    // Explosión central
+                                    myConfetti({
+                                        particleCount: 250,
+                                        spread: 160,
+                                        origin: { x: 0.5, y: 0.4 },
+                                        colors: ['#00FF41', '#00F2FF', '#FFD700', '#FF69B4', '#ffffff']
+                                    });
+                                    // Cañón izquierdo
+                                    setTimeout(() => myConfetti({
+                                        particleCount: 120,
+                                        angle: 60,
+                                        spread: 70,
+                                        origin: { x: 0, y: 0.6 },
+                                        colors: ['#00FF41', '#00F2FF', '#FFD700']
+                                    }), 300);
+                                    // Cañón derecho
+                                    setTimeout(() => myConfetti({
+                                        particleCount: 120,
+                                        angle: 120,
+                                        spread: 70,
+                                        origin: { x: 1, y: 0.6 },
+                                        colors: ['#00FF41', '#00F2FF', '#FFD700']
+                                    }), 600);
+                                };
+                                parent.document.head.appendChild(script);
                             }
                         </script>
                         <div style="height:1px"></div>
