@@ -278,10 +278,10 @@ if dict_cursos:
 
                 with t2:
                     c2 = st.columns(5)
-                    c2[0].metric("Parcial 3", f"{round_nota(row.get('P3', 0)):.1f}")
-                    c2[1].metric("Parcial 4", f"{round_nota(row.get('P4', 0)):.1f}")
-                    c2[2].metric("Proyecto de aula", f"{round_nota(row.get('PA', 0)):.1f}")
-                    c2[3].metric("Promedio Talleres", f"{round_nota(row.get('PQT2', 0)):.1f}")
+                    c2[0].metric("Parcial 3 (30%)", f"{round_nota(row.get('P3', 0)):.1f}")
+                    c2[1].metric("Parcial 4 (30%)", f"{round_nota(row.get('P4', 0)):.1f}")
+                    c2[2].metric("Proyecto de aula (20%)", f"{round_nota(row.get('PA', 0)):.1f}")
+                    c2[3].metric("Promedio Talleres (20%)", f"{round_nota(row.get('PQT2', 0)):.1f}")
                     c2[4].metric("Nota Corte 2", f"{round_nota(row.get('2CTE', 0)):.1f}")
                     
                     st.markdown("#### 📝 Detalle de Talleres")
