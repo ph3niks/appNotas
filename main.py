@@ -142,6 +142,7 @@ if dict_cursos:
         row       = res["row"]
         nrc_sel   = res["nrc"]
         todas_cols = res["todas_cols"]
+        idx_p3     = todas_cols.index('P3') if 'P3' in todas_cols else len(todas_cols)
                                                                                             
         # --- CABECERA ---
         st.markdown(f'<p class="user-welcome">Bienvenid@, {row.get("NOMBRE", "Estudiante")}</p>', unsafe_allow_html=True)
