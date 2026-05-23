@@ -296,12 +296,77 @@ if dict_cursos:
                         st.info("Sin registros de talleres aún.")
 
                 with t3:
-                    st.subheader("🎯 Proyección Final")
-                    req = (3.0 - p_c1) / 0.5
-                    if total >= 3.0:
-                        st.success(f"¡Felicidades ya has Aprobado el curso! Tu nota actual es {total:.2f}")
+                    st.subheader("🔮 ¿Qué necesito para aprobar?")
+                
+                    # Puntos ya fijos del corte 1
+                    # p_c1 ya está calculado arriba como: round_nota(row.get('1CTE', 0)) * 0.5
+                
+                    # Aporte del corte 2 sin P4 ni PQT2
+                    p3_val   = round_nota(row.get('P3', 0))
+                    pa_val   = round_nota(row.get('PA', 0))
+                    pqt2_val = round_nota(row.get('PQT2', 0))
+                    p4_val   = round_nota(row.get('P4', 0))
+                
+                    # Pesos del 2do corte (sobre la nota del corte, que vale 0-5)
+                    # P3=30%, P4=30%, PA=20%, PQT2=20%
+                    acum_fijo_c2 = p3_val * 0.30 + pa_val * 0.20   # lo que ya no cambia en C2
+                
+                    # Lo que ya lleva del C2 completo (0-5), aportando el 50% a la definitiva
+                    c2_actual = p3_val*0.30 + p4_val*0.30 + pa_val*0.20 + pqt2_val*0.20
+                    total_actual = p_c1 + round(c2_actual * 0.5, 4)
+                
+                    # P4 mínimo necesario (con PQT2 actual) para que C2 >= (3.0 - p_c1)/0.5
+                    c2_necesario = (3.0 - p_c1) / 0.5
+                    p4_necesario = (c2_necesario - acum_fijo_c2 - pqt2_val * 0.20) / 0.30
+                
+                    st.markdown("##### Con el promedio de talleres actual:")
+                    if p4_val > 0:
+                        st.info(f"Ya tienes P4 registrado: **{p4_val:.1f}**. Tu nota definitiva actual es **{total_actual:.2f}**.")
+                    elif p4_necesario <= 0:
+                        st.success("¡Ya aprobaste sin necesitar P4! 🎉")
+                    elif p4_necesario > 5.0:
+                        st.error(f"Con PQT2 = {pqt2_val:.1f}, necesitarías **{p4_necesario:.2f}** en P4, superando el máximo de 5.0.")
+                        st.warning("Intenta simular un mejor PQT2 con los sliders de abajo 👇")
                     else:
-                        st.warning(f"Necesitas promediar **{req:.2f}** en el segundo corte para pasar.")
+                        st.warning(f"Necesitas mínimo **{p4_necesario:.2f} / 5.0** en P4 para aprobar (con PQT2 = {pqt2_val:.1f}).")
+                
+                    st.divider()
+                    st.markdown("##### 🎛️ Simula tus escenarios")
+                
+                    col_s1, col_s2 = st.columns(2)
+                    with col_s1:
+                        p4_sim = st.slider(
+                            "Nota esperada en P4 (30%)", 0.0, 5.0,
+                            value=float(p4_val) if p4_val > 0 else 3.0,
+                            step=0.1, key="slider_p4")
+                    with col_s2:
+                        pqt2_sim = st.slider(
+                            "Promedio de talleres proyectado — PQT2 (20%)", 0.0, 5.0,
+                            value=float(pqt2_val), step=0.1, key="slider_pqt2")
+                
+                    c2_sim    = acum_fijo_c2 + p4_sim * 0.30 + pqt2_sim * 0.20
+                    total_sim = round(p_c1 + c2_sim * 0.5 + 0.0000001, 2)
+                
+                    color_sim = "#00FF41" if total_sim >= 3.0 else ("#F7B707" if total_sim >= 2.5 else "#FF3131")
+                    st.markdown(f"""
+                        <div style="margin-top:10px; padding:16px; background-color:#161B22;
+                                    border-radius:12px; border:1px solid #30363D; text-align:center;">
+                            <span style="color:#8b949e; font-size:0.9rem;">Nota definitiva proyectada</span><br>
+                            <span style="color:{color_sim}; font-size:2.5rem; font-weight:bold;">{total_sim:.2f}</span>
+                            <span style="color:#8b949e; font-size:1rem;"> / 5.0</span><br>
+                            <span style="color:{color_sim}; font-weight:bold;">
+                                {"✅ APRUEBA" if total_sim >= 3.0 else "❌ NO APRUEBA"}
+                            </span>
+                        </div>
+                    """, unsafe_allow_html=True)
+                
+                    p4_min_sim = (((3.0 - p_c1) / 0.5) - acum_fijo_c2 - pqt2_sim * 0.20) / 0.30
+                    if p4_min_sim <= 0:
+                        st.success(f"Con PQT2 = {pqt2_sim:.1f}, ya apruebas sin importar P4. 🎉")
+                    elif p4_min_sim > 5.0:
+                        st.error(f"Con PQT2 = {pqt2_sim:.1f}, no es posible aprobar ni con 5.0 en P4 😞.")
+                    else:
+                        st.info(f"Con PQT2 = {pqt2_sim:.1f}, necesitas mínimo **{p4_min_sim:.2f}** en P4 para aprobar. ¡Vamos!!! 💪 🚀")
             else:
                 st.warning("ID no encontrado en este NRC.")
         else:
