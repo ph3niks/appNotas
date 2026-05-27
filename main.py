@@ -156,6 +156,8 @@ if dict_cursos:
         # 2CTE es lo que lleva en el segundo corte (0-5). Aporta el otro 50%
         p_c2 = round_nota(row.get('2CTE', 0)) * 0.5
         total = p_c1 + p_c2
+        # Detectar si el segundo corte ya está cerrado (P4 con nota real)
+        segundo_corte_cerrado = row.get('P4', 0) > 0  # o la condición que uses para saber que ya hay nota final
         
         # Cálculo de cuánto necesita promediar en el Corte 2 para llegar a 3.0
         # Fórmula: (3.0 - puntos_obtenidos_en_C1) / 0.5
@@ -241,10 +243,42 @@ if dict_cursos:
             """, height=80)
         
         # Texto informativo dinámico
-        if total < 3.0:
-            st.write(f"Nota definitiva actual: **{total:.2f}** | Necesitas mínimo  **{max(0, nota_necesaria):.2f}** en el 2do Corte para pasar.")
+        # --- NOTA DEFINITIVA DESTACADA (solo si el 2do corte ya cerró) ---
+        if segundo_corte_cerrado:
+            if total >= 3.0:
+                color_final = "#00FF41"
+                icono_final = "🎉"
+                mensaje_final = "¡Felicitaciones! Aprobaste la materia. ¡Excelente trabajo!"
+            else:
+                color_final = "#FF3131"
+                icono_final = "😔"
+                mensaje_final = "Lo siento, no pasaste. Debes habilitar la materia."
+        
+            st.markdown(f"""
+                <div style="margin: 20px 0; padding: 24px; background-color:#161B22;
+                            border: 2px solid {color_final}; border-radius: 16px; text-align: center;
+                            box-shadow: 0 0 20px {color_final}44;">
+                    <div style="color:#8b949e; font-size:0.95rem; font-weight:bold; 
+                                text-transform:uppercase; margin-bottom:6px;">
+                        NOTA DEFINITIVA FINAL
+                    </div>
+                    <div style="color:{color_final}; font-size:3.5rem; font-weight:bold; 
+                                line-height:1.1;">
+                        {total:.2f}
+                        <span style="color:#8b949e; font-size:1.2rem;"> / 5.0</span>
+                    </div>
+                    <div style="color:{color_final}; font-size:1.2rem; font-weight:bold; 
+                                margin-top:10px;">
+                        {icono_final} {mensaje_final}
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
         else:
-            st.write(f"Nota definitiva actual: **{total:.2f}** | ¡Felicidades, ya cumpliste la meta!")
+            # Comportamiento original cuando aún no hay nota definitiva
+            if total < 3.0:
+                st.write(f"Nota definitiva actual: **{total:.2f}** | Necesitas mínimo **{max(0, nota_necesaria):.2f}** en el 2do Corte para pasar.")
+            else:
+                st.write(f"Nota definitiva actual: **{total:.2f}** | ¡Felicidades, ya cumpliste la meta!")
         
         st.divider()
 
