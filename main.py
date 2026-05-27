@@ -252,7 +252,7 @@ if dict_cursos:
             else:
                 color_final = "#FF3131"
                 icono_final = "😔"
-                mensaje_final = "Lo siento, no pasaste. Debes habilitar la materia."
+                mensaje_final = "Lo siento, no pasaste. Puedes habilitar la materia si deseas."
         
             st.markdown(f"""
                 <div style="margin: 20px 0; padding: 24px; background-color:#161B22;
