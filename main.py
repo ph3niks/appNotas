@@ -227,25 +227,24 @@ if dict_cursos:
         t1, t2, t3 = st.tabs(["📌 1ER CORTE", "🚀 2DO CORTE", "🎯 Simulador Nota definitiva"])
 
         with t1:
-            # Corte 1: P1(30%) + P2(30%) + PA1(20%) + PQT1(20%)
+            # Corte 1: P1(30%) + P2(30%) + CN(20%) + PQT1(20%)
             # CN es opcional (Cálculo Diferencial)
             tiene_cn = 'CN' in todas_cols
 
             if tiene_cn:
-                # Con CN: P1, P2, CN, PA1, PQT1, 1CTE → 6 columnas
+                # Con CN: P1, P2, CN, PQT1, 1CTE → 5 columnas
                 cols_metricas = st.columns(6)
                 cols_metricas[0].metric("Parcial 1 (30%)",        f"{round_nota(row.get('P1',   0)):.1f}")
                 cols_metricas[1].metric("Parcial 2 (30%)",        f"{round_nota(row.get('P2',   0)):.1f}")
-                cols_metricas[2].metric("Curso Nivelación",       f"{round_nota(row.get('CN',   0)):.1f}")
-                cols_metricas[3].metric("Proyecto Aula 1 (20%)",  f"{round_nota(row.get('PA1',  0)):.1f}")
-                cols_metricas[4].metric("Promedio Talleres (20%)",f"{round_nota(row.get('PQT1', 0)):.1f}")
-                cols_metricas[5].metric("Nota Corte 1",           f"{round_nota(row.get('1CTE', 0)):.1f}")
+                cols_metricas[2].metric("Curso Nivelación (20%)", f"{round_nota(row.get('CN',   0)):.1f}")
+                cols_metricas[3].metric("Promedio Talleres (20%)",f"{round_nota(row.get('PQT1', 0)):.1f}")
+                cols_metricas[4].metric("Nota Corte 1",           f"{round_nota(row.get('1CTE', 0)):.1f}")
             else:
                 # Sin CN: P1, P2, PA1, PQT1, 1CTE → 5 columnas
                 cols_metricas = st.columns(5)
                 cols_metricas[0].metric("Parcial 1 (30%)",        f"{round_nota(row.get('P1',   0)):.1f}")
                 cols_metricas[1].metric("Parcial 2 (30%)",        f"{round_nota(row.get('P2',   0)):.1f}")
-                cols_metricas[2].metric("Proyecto Aula 1 (20%)",  f"{round_nota(row.get('PA1',  0)):.1f}")
+                cols_metricas[2].metric("Proyecto Aula (20%)",  f"{round_nota(row.get('PA1',  0)):.1f}")
                 cols_metricas[3].metric("Promedio Talleres (20%)",f"{round_nota(row.get('PQT1', 0)):.1f}")
                 cols_metricas[4].metric("Nota Corte 1",           f"{round_nota(row.get('1CTE', 0)):.1f}")
 
