@@ -87,7 +87,7 @@ def load_data():
             df = xls.parse(sheet)
             df.columns = [str(c).strip().upper() for c in df.columns]
             for col in df.columns:
-                if col not in ['NOMBRE', 'ID', 'NRC']:
+                if col not in ['NOMBRE', 'ID', 'NRC','CN']:
                     df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
             if 'CN' in df.columns:
                 df['CN'] = pd.to_numeric(df['CN'], errors='coerce')
