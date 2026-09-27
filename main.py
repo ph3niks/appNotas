@@ -89,6 +89,9 @@ def load_data():
             for col in df.columns:
                 if col not in ['NOMBRE', 'ID', 'NRC']:
                     df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+            if 'CN' in df.columns:
+                df['CN'] = pd.to_numeric(df['CN'], errors='coerce')
+                # NaN = no hizo nivelación, 0 = lo hizo y sacó cero        
             data[sheet] = df
         return data
     except Exception as e:
@@ -229,26 +232,35 @@ if dict_cursos:
         with t1:
             # Corte 1: P1(30%) + P2(30%) + CN(20%) + PQT1(20%)
             # CN es opcional (Cálculo Diferencial)
-            tiene_cn = 'CN' in todas_cols
-
+            cn_val   = row.get('CN', None)
+            tiene_cn = 'CN' in todas_cols and pd.notna(cn_val)
+            
             if tiene_cn:
-                # Con CN: P1, P2, CN, PQT1, 1CTE → 5 columnas
-                cols_metricas = st.columns(6)
-                cols_metricas[0].metric("Parcial 1 (30%)",        f"{round_nota(row.get('P1',   0)):.1f}")
-                cols_metricas[1].metric("Parcial 2 (30%)",        f"{round_nota(row.get('P2',   0)):.1f}")
-                cols_metricas[2].metric("Curso Nivelación (20%)", f"{round_nota(row.get('CN',   0)):.1f}")
-                cols_metricas[3].metric("Promedio Talleres (20%)",f"{round_nota(row.get('PQT1', 0)):.1f}")
-                cols_metricas[4].metric("Nota Corte 1",           f"{round_nota(row.get('1CTE', 0)):.1f}")
-            else:
-                # Sin CN: P1, P2, PA1, PQT1, 1CTE → 5 columnas
+                # CN tiene valor → pesos normales
                 cols_metricas = st.columns(5)
-                cols_metricas[0].metric("Parcial 1 (30%)",        f"{round_nota(row.get('P1',   0)):.1f}")
-                cols_metricas[1].metric("Parcial 2 (30%)",        f"{round_nota(row.get('P2',   0)):.1f}")
-                cols_metricas[2].metric("Proyecto Aula (20%)",  f"{round_nota(row.get('PA1',  0)):.1f}")
-                cols_metricas[3].metric("Promedio Talleres (20%)",f"{round_nota(row.get('PQT1', 0)):.1f}")
-                cols_metricas[4].metric("Nota Corte 1",           f"{round_nota(row.get('1CTE', 0)):.1f}")
+                cols_metricas[0].metric("Parcial 1 (30%)",         f"{round_nota(row.get('P1',   0)):.1f}")
+                cols_metricas[1].metric("Parcial 2 (30%)",         f"{round_nota(row.get('P2',   0)):.1f}")
+                cols_metricas[2].metric("Curso Nivelación (20%)",  f"{round_nota(cn_val):.1f}")
+                cols_metricas[3].metric("Promedio Talleres (20%)", f"{round_nota(row.get('PQT1', 0)):.1f}")
+                cols_metricas[4].metric("Nota Corte 1",            f"{round_nota(row.get('1CTE', 0)):.1f}")
+            elif 'CN' in todas_cols:
+                # CN existe en la hoja pero vacío → pesos redistribuidos
+                cols_metricas = st.columns(4)
+                cols_metricas[0].metric("Parcial 1 (35%)",         f"{round_nota(row.get('P1',   0)):.1f}")
+                cols_metricas[1].metric("Parcial 2 (35%)",         f"{round_nota(row.get('P2',   0)):.1f}")
+                cols_metricas[2].metric("Promedio Talleres (30%)", f"{round_nota(row.get('PQT1', 0)):.1f}")
+                cols_metricas[3].metric("Nota Corte 1",            f"{round_nota(row.get('1CTE', 0)):.1f}")
+            else:
+                # Matemáticas II → con PA1
+                cols_metricas = st.columns(5)
+                cols_metricas[0].metric("Parcial 1 (30%)",         f"{round_nota(row.get('P1',   0)):.1f}")
+                cols_metricas[1].metric("Parcial 2 (30%)",         f"{round_nota(row.get('P2',   0)):.1f}")
+                cols_metricas[2].metric("Proyecto Aula 1 (20%)",   f"{round_nota(row.get('PA1',  0)):.1f}")
+                cols_metricas[3].metric("Promedio Talleres (20%)", f"{round_nota(row.get('PQT1', 0)):.1f}")
+                cols_metricas[4].metric("Nota Corte 1",            f"{round_nota(row.get('1CTE', 0)):.1f}")
 
             st.markdown("#### 📝 Detalle de Talleres")
+            
             t_cols_1 = [col for col in todas_cols if col.startswith('TA') and todas_cols.index(col) < idx_p3]
             if t_cols_1:
                 cols_t = st.columns(min(len(t_cols_1), 7))
