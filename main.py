@@ -220,9 +220,9 @@ if dict_cursos:
             """, height=80)
 
         if total < 3.0:
-            st.write(f"Nota definitiva actual: **{total:.2f}** | Necesitas mínimo **{max(0, nota_necesaria):.2f}** en el 2do Corte para pasar.")
+            st.write(f"Nota definitiva actual del semestre: **{total:.2f}** | Necesitas mínimo **{max(0, nota_necesaria):.2f}** en el 2do Corte para pasar.")
         else:
-            st.write(f"Nota definitiva actual: **{total:.2f}** | ¡Felicidades, ya cumpliste la meta!")
+            st.write(f"Nota definitiva actual del semestre: **{total:.2f}** | ¡Felicidades, ya cumpliste la meta!")
 
         st.divider()
 
