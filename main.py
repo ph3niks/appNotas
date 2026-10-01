@@ -40,6 +40,30 @@ st.markdown("""
     }
     [data-testid="stMetricValue"] { color: #00F2FF !important; }
 
+    /* Nota Corte 1 — Violeta Neón */
+    [data-testid="stMetric"]:has(> div > [data-testid="stMetricLabel"] p:contains("Corte 1")) 
+    [data-testid="stMetricLabel"] p {
+        color: #A78BFA !important;
+        text-shadow: 0 0 8px #A78BFA !important;
+    }
+    [data-testid="stMetric"]:has(> div > [data-testid="stMetricLabel"] p:contains("Corte 1")) 
+    [data-testid="stMetricValue"] {
+        color: #C084FC !important;
+        text-shadow: 0 0 12px #C084FC, 0 0 24px #A78BFA !important;
+    }
+    
+    /* Nota Corte 2 — Verde Neón */
+    [data-testid="stMetric"]:has(> div > [data-testid="stMetricLabel"] p:contains("Corte 2")) 
+    [data-testid="stMetricLabel"] p {
+        color: #34D399 !important;
+        text-shadow: 0 0 8px #34D399 !important;
+    }
+    [data-testid="stMetric"]:has(> div > [data-testid="stMetricLabel"] p:contains("Corte 2")) 
+    [data-testid="stMetricValue"] {
+        color: #00FF94 !important;
+        text-shadow: 0 0 12px #00FF94, 0 0 24px #34D399 !important;
+    }
+
     .taller-card {
         background-color: #1c2128;
         border: 1px solid #444c56;
