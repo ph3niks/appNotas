@@ -40,29 +40,7 @@ st.markdown("""
     }
     [data-testid="stMetricValue"] { color: #00F2FF !important; }
 
-    /* Nota Corte 1 — Violeta Neón */
-    [data-testid="stMetric"]:has(> div > [data-testid="stMetricLabel"] p:contains("Corte 1")) 
-    [data-testid="stMetricLabel"] p {
-        color: #A78BFA !important;
-        text-shadow: 0 0 8px #A78BFA !important;
-    }
-    [data-testid="stMetric"]:has(> div > [data-testid="stMetricLabel"] p:contains("Corte 1")) 
-    [data-testid="stMetricValue"] {
-        color: #C084FC !important;
-        text-shadow: 0 0 12px #C084FC, 0 0 24px #A78BFA !important;
-    }
     
-    /* Nota Corte 2 — Verde Neón */
-    [data-testid="stMetric"]:has(> div > [data-testid="stMetricLabel"] p:contains("Corte 2")) 
-    [data-testid="stMetricLabel"] p {
-        color: #34D399 !important;
-        text-shadow: 0 0 8px #34D399 !important;
-    }
-    [data-testid="stMetric"]:has(> div > [data-testid="stMetricLabel"] p:contains("Corte 2")) 
-    [data-testid="stMetricValue"] {
-        color: #00FF94 !important;
-        text-shadow: 0 0 12px #00FF94, 0 0 24px #34D399 !important;
-    }
 
     .taller-card {
         background-color: #1c2128;
@@ -281,7 +259,21 @@ if dict_cursos:
                 cols_metricas[1].metric("Parcial 2 (30%)",         f"{round_nota(row.get('P2',   0)):.1f}")
                 cols_metricas[2].metric("Proyecto Aula 1 (20%)",   f"{round_nota(row.get('PA1',  0)):.1f}")
                 cols_metricas[3].metric("Promedio Talleres (20%)", f"{round_nota(row.get('PQT1', 0)):.1f}")
-                cols_metricas[4].metric("Nota Corte 1",            f"{round_nota(row.get('1CTE', 0)):.1f}")
+                #cols_metricas[4].metric("Nota Corte 1",            f"{round_nota(row.get('1CTE', 0)):.1f}")
+                with cols_metricas[4]:
+                    st.markdown(f"""
+                        <div style="background-color:#161B22; border:1px solid #30363D;
+                                    border-radius:12px; padding:15px;
+                                    box-shadow:0 4px 12px rgba(0,0,0,0.5);">
+                            <p style="color:#A78BFA; font-size:0.9rem; font-weight:700;
+                                      text-transform:uppercase; margin:0 0 4px 0;
+                                      text-shadow:0 0 8px #A78BFA;">NOTA CORTE 1</p>
+                            <p style="color:#C084FC; font-size:1.8rem; font-weight:700;
+                                      margin:0; text-shadow:0 0 12px #C084FC, 0 0 24px #A78BFA;">
+                                {round_nota(row.get('1CTE', 0)):.1f}
+                            </p>
+                        </div>
+                    """, unsafe_allow_html=True)
 
             st.markdown("#### 📝 Detalle de Talleres")
             
@@ -304,7 +296,21 @@ if dict_cursos:
             c2[1].metric("Parcial 4 (30%)",         f"{round_nota(row.get('P4',   0)):.1f}")
             c2[2].metric("Proyecto Aula 2 (20%)",   f"{round_nota(row.get('PA2',  0)):.1f}")
             c2[3].metric("Promedio Talleres (20%)", f"{round_nota(row.get('PQT2', 0)):.1f}")
-            c2[4].metric("Nota Corte 2",            f"{round_nota(row.get('2CTE', 0)):.1f}")
+            #c2[4].metric("Nota Corte 2",            f"{round_nota(row.get('2CTE', 0)):.1f}")
+            with c2[4]:
+                st.markdown(f"""
+                    <div style="background-color:#161B22; border:1px solid #30363D;
+                                border-radius:12px; padding:15px;
+                                box-shadow:0 4px 12px rgba(0,0,0,0.5);">
+                        <p style="color:#34D399; font-size:0.9rem; font-weight:700;
+                                  text-transform:uppercase; margin:0 0 4px 0;
+                                  text-shadow:0 0 8px #34D399;">NOTA CORTE 2</p>
+                        <p style="color:#00FF94; font-size:1.8rem; font-weight:700;
+                                  margin:0; text-shadow:0 0 12px #00FF94, 0 0 24px #34D399;">
+                            {round_nota(row.get('2CTE', 0)):.1f}
+                        </p>
+                    </div>
+                """, unsafe_allow_html=True)
 
             st.markdown("#### 📝 Detalle de Talleres")
             t_cols_2 = [col for col in todas_cols if col.startswith('TA') and todas_cols.index(col) > idx_p3]
