@@ -351,6 +351,16 @@ if dict_cursos:
             else:
                 st.info("Sin registros de talleres aún.")
 
+            # Exposición
+            if 'EXP' in todas_cols and todas_cols.index('EXP') > idx_p3 and row.get('EXP', 0) > 0:
+                st.markdown("#### 🎤 Exposición")
+                st.markdown(f"""
+                    <div class="taller-card" style="max-width:160px;">
+                        <span class="taller-label">EXP</span>
+                        <span class="taller-value">{round_nota(row.get('EXP', 0)):.1f}</span>
+                    </div>
+                """, unsafe_allow_html=True)
+
         with t3:
             st.subheader("🔮 ¿Qué necesito para aprobar?")
 
