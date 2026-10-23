@@ -365,51 +365,59 @@ if dict_cursos:
             st.subheader("🔮 ¿Qué necesito para aprobar?")
 
             p3_val   = round_nota(row.get('P3',   0))
-            pa2_val  = round_nota(row.get('PA2',  0))
-            pqt2_val = round_nota(row.get('PQT2', 0))
             p4_val   = round_nota(row.get('P4',   0))
+            pqt2_val = round_nota(row.get('PQT2', 0))
 
-            # Componentes fijos del 2do corte (P3 y PA2 ya no cambian)
-            # Corte 2: P3(30%) + P4(30%) + PA2(20%) + PQT2(20%)
-            acum_fijo_c2 = p3_val * 0.30 + pa2_val * 0.20
+            # Detectar tipo de curso y obtener el valor/label de PA
+            tiene_cn = 'CN' in todas_cols and pd.notna(row.get('CN', None))
+            if tiene_cn:
+                pa_key   = 'PA'
+                pa_label = "Proyecto de Aula — PA (20%)"
+            else:
+                pa_key   = 'PA2'
+                pa_label = "Proyecto de Aula 2 — PA2 (20%)"
 
-            # Nota C2 necesaria para aprobar con lo que se tiene en C1
+            pa_val = round_nota(row.get(pa_key, 0))
+
+            # Solo P3 es fijo en el simulador; PA, P4 y PQT2 son sliders
+            acum_fijo_c2 = p3_val * 0.30
             c2_necesario = (3.0 - p_c1) / 0.5
-
-            # P4 mínimo necesario con el PQT2 actual
-            p4_necesario = (c2_necesario - acum_fijo_c2 - pqt2_val * 0.20) / 0.30
+            p4_necesario = (c2_necesario - acum_fijo_c2 - pa_val * 0.20 - pqt2_val * 0.20) / 0.30
 
             st.markdown("##### Con los valores actuales:")
             if p4_val > 0:
-                c2_actual    = acum_fijo_c2 + p4_val * 0.30 + pqt2_val * 0.20
+                c2_actual    = acum_fijo_c2 + p4_val * 0.30 + pa_val * 0.20 + pqt2_val * 0.20
                 total_actual = round(p_c1 + c2_actual * 0.5, 2)
                 st.info(f"Ya tienes P4 registrado: **{p4_val:.1f}**. Tu nota definitiva actual es **{total_actual:.2f}**.")
             elif p4_necesario <= 0:
                 st.success("¡Ya aprobaste sin necesitar P4! 🎉")
             elif p4_necesario > 5.0:
-                st.error(f"Con PQT2 = {pqt2_val:.1f}, necesitarías **{p4_necesario:.2f}** en P4, superando el máximo de 5.0.")
-                st.warning("Intenta simular un mejor PQT2 con los sliders de abajo 👇")
+                st.error(f"Necesitarías **{p4_necesario:.2f}** en P4, superando el máximo de 5.0.")
+                st.warning("Intenta simular mejores valores con los sliders de abajo 👇")
             else:
-                st.warning(f"Necesitas mínimo **{p4_necesario:.2f} / 5.0** en P4 para aprobar (con PQT2 = {pqt2_val:.1f}).")
+                st.warning(f"Necesitas mínimo **{p4_necesario:.2f} / 5.0** en P4 para aprobar.")
 
             st.divider()
             st.markdown("##### 🎛️ Simula tus escenarios")
 
-            col_s1, col_s2 = st.columns(2)
+            col_s1, col_s2, col_s3 = st.columns(3)
             with col_s1:
                 p4_sim = st.slider(
                     "Nota esperada en P4 (30%)", 0.0, 5.0,
                     value=float(p4_val) if p4_val > 0 else 3.0,
-                    step=0.1, key="slider_p4"
-                )
+                    step=0.1, key="slider_p4")
             with col_s2:
+                pa_sim = st.slider(
+                    pa_label, 0.0, 5.0,
+                    value=float(pa_val) if pa_val > 0 else 3.0,
+                    step=0.1, key="slider_pa")
+            with col_s3:
                 pqt2_sim = st.slider(
-                    "Promedio de talleres proyectado — PQT2 (20%)", 0.0, 5.0,
+                    "Promedio de talleres — PQT2 (20%)", 0.0, 5.0,
                     value=float(pqt2_val),
-                    step=0.1, key="slider_pqt2"
-                )
+                    step=0.1, key="slider_pqt2")
 
-            c2_sim    = acum_fijo_c2 + p4_sim * 0.30 + pqt2_sim * 0.20
+            c2_sim    = acum_fijo_c2 + p4_sim * 0.30 + pa_sim * 0.20 + pqt2_sim * 0.20
             total_sim = round(p_c1 + c2_sim * 0.5 + 0.0000001, 2)
 
             color_sim = "#00FF41" if total_sim >= 3.0 else ("#F7B707" if total_sim >= 2.5 else "#FF3131")
@@ -425,10 +433,10 @@ if dict_cursos:
                 </div>
             """, unsafe_allow_html=True)
 
-            p4_min_sim = (c2_necesario - acum_fijo_c2 - pqt2_sim * 0.20) / 0.30
+            p4_min_sim = (c2_necesario - acum_fijo_c2 - pa_sim * 0.20 - pqt2_sim * 0.20) / 0.30
             if p4_min_sim <= 0:
-                st.success(f"Con PQT2 = {pqt2_sim:.1f}, ya apruebas sin importar P4. 🎉")
+                st.success(f"Con estos valores, ya apruebas sin importar P4. 🎉")
             elif p4_min_sim > 5.0:
-                st.error(f"Con PQT2 = {pqt2_sim:.1f}, no es posible aprobar ni con 5.0 en P4 😞.")
+                st.error(f"Con estos valores, no es posible aprobar ni con 5.0 en P4 😞.")
             else:
-                st.info(f"Con PQT2 = {pqt2_sim:.1f}, necesitas mínimo **{p4_min_sim:.2f}** en P4 para aprobar. ¡Vamos! 💪🚀")
+                st.info(f"Necesitas mínimo **{p4_min_sim:.2f}** en P4 para aprobar. ¡Vamos! 💪🚀")
