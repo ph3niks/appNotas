@@ -155,9 +155,14 @@ if dict_cursos:
         total = p_c1 + p_c2
         nota_necesaria = (3.0 - p_c1) / 0.5
 
+        segundo_corte_cerrado = round_nota(row.get('P4', 0)) > 0
+
         if total >= 3.0:
             color_b    = "#00FF41"
             status_txt = "¡FELICITACIONES YA HAS APROBADO LA MATERIA! 🎉"
+        elif segundo_corte_cerrado:
+            color_b    = "#FF3131"
+            status_txt = "Lo siento 😔: has perdido la materia"
         elif nota_necesaria > 5.0:
             color_b    = "#FF3131"
             status_txt = "Lo siento 😔. Ya no te alcanza para pasar la materia 😵"
